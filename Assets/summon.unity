@@ -247,6 +247,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   host: localhost
   port: 5005
+  rabbitPrefab: {fileID: 8264515783734592142, guid: 8ea7eac106376284699ddbf177a63c10, type: 3}
+  birdPrefab: {fileID: 6153947236659971998, guid: 760332ddabe04c742bc58550ae2a0e2a, type: 3}
+  frogPrefab: {fileID: 5418419091766447124, guid: b3ff43da7c2ebcd46abe795dfbeae02c, type: 3}
+  spawnPosition: {x: 0, y: 0, z: 0}
+  destroyPrevious: 1
   latestGesture: 
   isConnected: 0
 --- !u!4 &439998816
