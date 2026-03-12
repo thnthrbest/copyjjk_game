@@ -12,7 +12,10 @@ GameObject:
   - component: {fileID: 8481625970760008061}
   - component: {fileID: 269894965227558576}
   - component: {fileID: 3073209397800598698}
+<<<<<<< HEAD
   - component: {fileID: 5999780094348161835}
+=======
+>>>>>>> fe97a72c46fd6ecd4556049b90a2c8a09c177f88
   m_Layer: 0
   m_Name: bird
   m_TagString: Untagged
@@ -106,6 +109,7 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+<<<<<<< HEAD
 --- !u!54 &5999780094348161835
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -133,3 +137,5 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+=======
+>>>>>>> fe97a72c46fd6ecd4556049b90a2c8a09c177f88
