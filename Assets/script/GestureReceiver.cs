@@ -12,13 +12,14 @@ public class GestureReceiver : MonoBehaviour
     public int port = 5005;
 
     [Header("Gesture Prefabs")]
-    public GameObject rabbitPrefab;
-    public GameObject birdPrefab;
-    public GameObject frogPrefab;
+    // public GameObject rabbitPrefab;
+    // public GameObject birdPrefab;
+    // public GameObject frogPrefab;
 
-    [Header("Spawn Settings")]
-    public Vector3 spawnPosition = Vector3.zero;  // ตำแหน่ง spawn
-    public bool destroyPrevious = true;            // ลบ obj เก่าก่อน spawn ใหม่
+    [Header("skill Settings")]
+    // public Vector3 spawnPosition = Vector3.zero;  // ตำแหน่ง spawn
+    // public bool destroyPrevious = true;            // ลบ obj เก่าก่อน spawn ใหม่
+    public GameObject player;  // อ้างอิงถึงสกิลโล่กระต่าย
 
     [Header("Debug")]
     public string latestGesture = "";
@@ -35,7 +36,7 @@ public class GestureReceiver : MonoBehaviour
     private float WAIT_SECONDS = 5f;
 
     // ───── Spawn ─────
-    private GameObject currentObj = null;  // เก็บ obj ที่ spawn ล่าสุด
+    //  private GameObject currentObj = null;  // เก็บ obj ที่ spawn ล่าสุด
 
     // ───── Queue ─────
     private readonly Queue<string> gestureQueue = new Queue<string>();
@@ -163,38 +164,38 @@ public class GestureReceiver : MonoBehaviour
     void ProcessGesture(string gesture)
     {
         Debug.Log($"[Gesture] ✅ ครบ {WAIT_SECONDS} วิ — spawn: {gesture}");
+        GetPrefabByGesture(gesture);
 
-        // ─── เลือก Prefab ตามชื่อท่า ───
-        GameObject prefab = GetPrefabByGesture(gesture);
-
-        if (prefab == null)
-        {
-            Debug.LogWarning($"[Gesture] ไม่พบ Prefab สำหรับท่า: {gesture}");
-            return;
-        }
+        // if (prefab == null)
+        // {
+        //     Debug.LogWarning($"[Gesture] ไม่พบ Prefab สำหรับท่า: {gesture}");
+        //     return;
+        // }
 
         // ─── ลบ obj เก่าถ้าเปิด destroyPrevious ───
-        if (destroyPrevious && currentObj != null)
-        {
-            Destroy(currentObj);
-            currentObj = null;
-            Debug.Log("[Gesture] ลบ obj เก่าแล้ว");
-        }
+        // if (destroyPrevious && currentObj != null)
+        // {
+        //     Destroy(currentObj);
+        //     currentObj = null;
+        //     Debug.Log("[Gesture] ลบ obj เก่าแล้ว");
+        // }
 
         // ─── Spawn obj ใหม่ ───
-        currentObj = Instantiate(prefab, spawnPosition, Quaternion.identity);
-        currentObj.name = gesture + "_spawned";
-        Debug.Log($"[Gesture] Spawn {gesture} ที่ {spawnPosition}");
+        // currentObj = Instantiate(prefab, spawnPosition, Quaternion.identity);
+        // currentObj.name = gesture + "_spawned";
+    
+       // Debug.Log($"[Gesture] Spawn {gesture} ที่ {spawnPosition}");
     }
 
-    GameObject GetPrefabByGesture(string gesture)
+    void GetPrefabByGesture(string gesture)
     {
         switch (gesture)
         {
-            case "rabbit": return rabbitPrefab;
-            case "bird":   return birdPrefab;
-            case "frog":   return frogPrefab;
-            default:       return null;
+            case "rabbit":player.GetComponent<rabbitskill>().StartSkill();
+            break;
+                
+            // case "bird":   
+            // case "frog":
         }
     }
 

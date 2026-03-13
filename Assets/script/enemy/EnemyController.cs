@@ -21,7 +21,7 @@ public class EnemyController : MonoBehaviour
     void Awake()
     {
         // หา Player อัตโนมัติ
-        GameObject p = GameObject.FindWithTag("Player");
+        GameObject p = GameObject.FindWithTag("player");
         if (p != null)
             player = p.transform;
         else
@@ -84,7 +84,7 @@ public class EnemyController : MonoBehaviour
         alreadyAttacked = true;
         Invoke(nameof(ResetAttack), timeBetweenAttacks);
 
-        Debug.Log("[Enemy] ยิงกระสุน!");
+        //Debug.Log("[Enemy] ยิงกระสุน!");
     }
 
     void ResetAttack()
