@@ -405,9 +405,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-<<<<<<< HEAD
   m_IsActive: 0
-=======
   m_IsActive: 1
 >>>>>>> fe97a72c46fd6ecd4556049b90a2c8a09c177f88
 --- !u!114 &439998815
@@ -457,10 +455,7 @@ GameObject:
   - component: {fileID: 767966293}
   - component: {fileID: 767966292}
   - component: {fileID: 767966291}
-<<<<<<< HEAD
   - component: {fileID: 767966294}
-=======
->>>>>>> fe97a72c46fd6ecd4556049b90a2c8a09c177f88
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -485,13 +480,8 @@ Camera:
   m_GameObject: {fileID: 767966290}
   m_Enabled: 1
   serializedVersion: 2
-<<<<<<< HEAD
   m_ClearFlags: 2
   m_BackGroundColor: {r: 0.89433956, g: 0.74216974, b: 0.7002847, a: 0}
-=======
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
->>>>>>> fe97a72c46fd6ecd4556049b90a2c8a09c177f88
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
