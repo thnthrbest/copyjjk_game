@@ -77,7 +77,7 @@ public class StagePathController : MonoBehaviour
                 enemyCount++;
         }
 
-        Debug.Log("Enemies Remaining: " + enemyCount);
+        //Debug.Log("Enemies Remaining: " + enemyCount);
 
         if (enemyCount == 0)
             GoNextPoint();
