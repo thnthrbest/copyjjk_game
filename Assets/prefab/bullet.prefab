@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7020439551830388393}
   - component: {fileID: 7249718520920289040}
   - component: {fileID: -7083760945969465540}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: bullet
   m_TagString: Magic
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
