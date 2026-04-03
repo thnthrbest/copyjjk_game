@@ -5,6 +5,7 @@ public class PlayerCombatLock : MonoBehaviour
 {
     [Header("Enemy Detect Box")]
     public GameObject detectorBox;
+    public LayerMask enemyLayer;
 
     [Header("Lock Icon Prefab")]
     public GameObject lockPrefab;
@@ -17,9 +18,7 @@ public class PlayerCombatLock : MonoBehaviour
     private float nextShootTime = 0f;
 
     private List<Transform> enemiesInRange = new List<Transform>();
-
     private Transform currentTarget;
-
     private GameObject currentLockIcon;
 
     private string lastInput = "";
@@ -33,10 +32,16 @@ public class PlayerCombatLock : MonoBehaviour
 
     void ScanEnemies()
     {
+        if (detectorBox == null) return;
+
+        BoxCollider box = detectorBox.GetComponent<BoxCollider>();
+        if (box == null) return;
+
         Collider[] hits = Physics.OverlapBox(
-            detectorBox.transform.position,
-            detectorBox.transform.localScale / 2,
-            detectorBox.transform.rotation
+            box.bounds.center,
+            box.bounds.extents,
+            detectorBox.transform.rotation,
+            enemyLayer
         );
 
         enemiesInRange.Clear();
@@ -49,10 +54,12 @@ public class PlayerCombatLock : MonoBehaviour
             }
         }
 
+        Debug.Log("Enemies in range: " + enemiesInRange.Count);
+
+        // 🔥 Auto lock ถ้ายังไม่มี target
         if (currentTarget == null && enemiesInRange.Count > 0)
         {
-            int randomIndex = Random.Range(0, enemiesInRange.Count);
-            SetTarget(enemiesInRange[randomIndex]);
+            SetTarget(enemiesInRange[0]);
         }
     }
 
@@ -66,9 +73,7 @@ public class PlayerCombatLock : MonoBehaviour
         }
 
         currentLockIcon = Instantiate(lockPrefab);
-
         currentLockIcon.transform.SetParent(enemy);
-
         currentLockIcon.transform.localPosition = new Vector3(0, 2f, 0);
     }
 
@@ -84,6 +89,12 @@ public class PlayerCombatLock : MonoBehaviour
             }
 
             currentTarget = null;
+
+            // 🔥 ล็อกใหม่ทันทีถ้ายังมี enemy
+            if (enemiesInRange.Count > 0)
+            {
+                SetTarget(enemiesInRange[0]);
+            }
         }
     }
 
@@ -121,9 +132,7 @@ public class PlayerCombatLock : MonoBehaviour
         int index = enemiesInRange.IndexOf(currentTarget);
 
         index--;
-
-        if (index < 0)
-            index = enemiesInRange.Count - 1;
+        if (index < 0) index = enemiesInRange.Count - 1;
 
         SetTarget(enemiesInRange[index]);
     }
@@ -138,9 +147,7 @@ public class PlayerCombatLock : MonoBehaviour
         int index = enemiesInRange.IndexOf(currentTarget);
 
         index++;
-
-        if (index >= enemiesInRange.Count)
-            index = 0;
+        if (index >= enemiesInRange.Count) index = 0;
 
         SetTarget(enemiesInRange[index]);
     }
@@ -148,7 +155,6 @@ public class PlayerCombatLock : MonoBehaviour
     void Shoot()
     {
         if (Time.time < nextShootTime) return;
-
         if (currentTarget == null) return;
 
         nextShootTime = Time.time + shootCooldown;
@@ -171,10 +177,10 @@ public class PlayerCombatLock : MonoBehaviour
     {
         if (detectorBox == null) return;
 
+        BoxCollider box = detectorBox.GetComponent<BoxCollider>();
+        if (box == null) return;
+
         Gizmos.color = Color.red;
-
-        Gizmos.matrix = detectorBox.transform.localToWorldMatrix;
-
-        Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+        Gizmos.DrawWireCube(box.bounds.center, box.bounds.size);
     }
 }
