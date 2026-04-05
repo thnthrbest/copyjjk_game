@@ -123,5 +123,5 @@ MonoBehaviour:
   targetBullet: {fileID: 0}
   selfDestroyTime: 3
   startOffsetY: -1.5
-  targetOffsetY: 0.5
+  targetOffsetY: 1.5
   riseSpeed: 15
