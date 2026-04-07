@@ -2,19 +2,22 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
+    public float      damage     = 10f;
+    public string     source     = "Enemy Bullet";
+
     void OnTriggerEnter(Collider other)
     {
-        // ─── ถ้าโดน Player ───
+        //if (other.CompareTag("Enemy") || other.CompareTag("Bullet")) return;
+
         if (other.CompareTag("Player"))
         {
-            // other.GetComponent<PlayerHealth>()?.TakeDamage(10); ← เปิดทีหลัง
+            PlayerHealth hp = other.GetComponent<PlayerHealth>();
+            if (hp != null)
+                hp.TakeDamage(damage, source);
+            
             Destroy(gameObject);
         }
 
-        // ─── ถ้าโดนกำแพงหรืออื่นๆ ───
-        if (other.CompareTag("Bullet"))
-        {
-            Destroy(gameObject);
-        }
+       
     }
 }

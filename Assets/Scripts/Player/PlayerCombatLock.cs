@@ -54,7 +54,7 @@ public class PlayerCombatLock : MonoBehaviour
             }
         }
 
-        Debug.Log("Enemies in range: " + enemiesInRange.Count);
+        //Debug.Log("Enemies in range: " + enemiesInRange.Count);
 
         // 🔥 Auto lock ถ้ายังไม่มี target
         if (currentTarget == null && enemiesInRange.Count > 0)
