@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
@@ -14,6 +15,7 @@ public class PlayerController : MonoBehaviour
     public float crouchHeight = 1f;
 
     public float jumpCooldown = 0.3f;
+    public StagePathController stagePathController;
 
     CharacterController controller;
 
@@ -23,10 +25,13 @@ public class PlayerController : MonoBehaviour
     float lastJumpTime = -10f;
     string lastCommand = "";
 
+    Animator animator;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
         originalHeight = controller.height;
+        animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -51,6 +56,8 @@ public class PlayerController : MonoBehaviour
         {
             verticalVelocity = jumpForce;
             lastJumpTime = Time.time;
+
+            animator.SetTrigger("jump");
         }
 
         verticalVelocity += gravity * Time.deltaTime;
@@ -66,11 +73,15 @@ public class PlayerController : MonoBehaviour
         pos.z = 0f; // ล็อก Z ให้ตรงกับ RailRoot
         transform.localPosition = pos;
 
-        if (cmd == "Crouch")
-            controller.height = crouchHeight;
-        else
-            controller.height = originalHeight;
+        // if (cmd == "Crouch")
+        //     controller.height = crouchHeight;
+        // else
+        //     controller.height = originalHeight;
 
         lastCommand = cmd;
+
+        animator.SetBool("move", stagePathController.moving);
+
+
     }
 }

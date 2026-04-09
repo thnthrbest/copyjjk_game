@@ -23,6 +23,11 @@ public class PlayerCombatLock : MonoBehaviour
 
     private string lastInput = "";
 
+    Animator animator;
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+    }
     void Update()
     {
         ScanEnemies();
@@ -118,6 +123,7 @@ public class PlayerCombatLock : MonoBehaviour
 
         if (input == "AIM_UP" || input == "AIM_DOWN")
         {
+            animator.SetTrigger("attack");
             Shoot();
         }
     }

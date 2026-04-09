@@ -16,7 +16,7 @@ public class StagePathController : MonoBehaviour
     public float stopDistance = 0.5f;
 
     int currentIndex = 0;
-    bool moving = true;
+    public bool moving = true;
 
     void Update()
     {
