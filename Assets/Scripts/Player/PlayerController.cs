@@ -65,7 +65,10 @@ public class PlayerController : MonoBehaviour
         // ขยับเฉพาะ X,Y
         Vector3 move = new Vector3(moveX, verticalVelocity, 0f);
 
-        controller.Move(move * Time.deltaTime);
+        // แปลง local → world
+        Vector3 worldMove = transform.parent.TransformDirection(move);
+
+        controller.Move(worldMove * Time.deltaTime);
 
         // จำกัดการหลบซ้ายขวา
         Vector3 pos = transform.localPosition;
