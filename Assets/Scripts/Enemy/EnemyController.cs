@@ -18,6 +18,12 @@ public class EnemyController : MonoBehaviour
     private Transform player;
     private bool      alreadyAttacked = false;
 
+    Animator animator;
+     void Start()
+    {
+        animator = GetComponent<Animator>();
+    }
+
     void Awake()
     {
         // หา Player อัตโนมัติ
@@ -38,6 +44,7 @@ public class EnemyController : MonoBehaviour
 
         if (playerInSightRange)
         {
+            animator.SetTrigger("attack");
             LookAtPlayer();
             TryAttack();
         }

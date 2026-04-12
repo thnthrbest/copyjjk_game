@@ -1153,7 +1153,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0.009588591, y: -0.2748983, z: -0.0027416993, w: 0.9614216}
   m_LocalPosition: {x: -6.39, y: 1.54, z: 9.56}
-  m_LocalScale: {x: 1200, y: 1200, z: 1200}
+  m_LocalScale: {x: 1242.55, y: 1242.55, z: 1242.55}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1767747807}
@@ -2004,15 +2004,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 362000783}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7398488, y: 0.052868493, z: -0.14210781, w: 0.6554648}
-  m_LocalPosition: {x: 3.17, y: -9.58, z: 15.49}
+  m_LocalRotation: {x: -0.9503297, y: -0.013664793, z: -0.15100677, w: 0.2718157}
+  m_LocalPosition: {x: 3.17, y: 6.7950716, z: 27.710793}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 217976113}
   - {fileID: 689638710}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -107.28, y: -70.25702, z: 62.938004}
+  m_LocalEulerAnglesHint: {x: -148.617, y: -19.117004, z: 3.7689972}
 --- !u!1 &362370292
 GameObject:
   m_ObjectHideFlags: 0
@@ -2912,6 +2912,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 689638710}
+  - component: {fileID: 689638712}
   - component: {fileID: 689638711}
   m_Layer: 0
   m_Name: rabbit
@@ -2929,14 +2930,14 @@ Transform:
   m_GameObject: {fileID: 689638709}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.74, y: 8.8, z: 12.8}
-  m_LocalScale: {x: 29.999998, y: 29.999998, z: 29.999998}
+  m_LocalPosition: {x: -8.31, y: 15.3, z: 14.18}
+  m_LocalScale: {x: 54.6, y: 54.6, z: 54.6}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 362000784}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!137 &689638711
-SkinnedMeshRenderer:
+--- !u!23 &689638711
+MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -2950,14 +2951,14 @@ SkinnedMeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 3
+  m_RayTracingMode: 2
   m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9cf9646f5f43abe41997da01df68705e, type: 2}
-  - {fileID: 4362962105363994262, guid: 751f793ce0b435f479a9a29a11e3181e, type: 3}
-  - {fileID: 2100000, guid: 9cf9646f5f43abe41997da01df68705e, type: 2}
+  - {fileID: 2100000, guid: 32a76832b79e84347ad9df08b12709c3, type: 2}
+  - {fileID: 2100000, guid: 32a76832b79e84347ad9df08b12709c3, type: 2}
+  - {fileID: 2100000, guid: 32a76832b79e84347ad9df08b12709c3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2978,62 +2979,15 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  serializedVersion: 2
-  m_Quality: 0
-  m_UpdateWhenOffscreen: 0
-  m_SkinnedMotionVectors: 1
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &689638712
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 689638709}
   m_Mesh: {fileID: 682789918060435635, guid: 751f793ce0b435f479a9a29a11e3181e, type: 3}
-  m_Bones:
-  - {fileID: 1152252532}
-  - {fileID: 362370293}
-  - {fileID: 35738089}
-  - {fileID: 523953187}
-  - {fileID: 82489838}
-  - {fileID: 1929165427}
-  - {fileID: 801523726}
-  - {fileID: 1354333773}
-  - {fileID: 470633894}
-  - {fileID: 1143158920}
-  - {fileID: 1088941291}
-  - {fileID: 582863009}
-  - {fileID: 594506558}
-  - {fileID: 467919998}
-  - {fileID: 658022422}
-  - {fileID: 959913101}
-  - {fileID: 976240797}
-  - {fileID: 1809512377}
-  - {fileID: 310481414}
-  - {fileID: 1194891146}
-  - {fileID: 1580331359}
-  - {fileID: 17761705}
-  - {fileID: 1348514187}
-  - {fileID: 1644105213}
-  - {fileID: 667878851}
-  - {fileID: 247197871}
-  - {fileID: 1419552344}
-  - {fileID: 2061992494}
-  - {fileID: 68528387}
-  - {fileID: 1698163036}
-  - {fileID: 388443721}
-  - {fileID: 1572103963}
-  - {fileID: 29106145}
-  - {fileID: 400336849}
-  - {fileID: 2043048944}
-  - {fileID: 1106490610}
-  - {fileID: 89289864}
-  - {fileID: 17694521}
-  - {fileID: 1780105971}
-  - {fileID: 923692410}
-  - {fileID: 1767747807}
-  - {fileID: 417231958}
-  - {fileID: 273260571}
-  - {fileID: 1076090322}
-  m_BlendShapeWeights: []
-  m_RootBone: {fileID: 1152252532}
-  m_AABB:
-    m_Center: {x: 1.1641532e-10, y: -0.0015179288, z: -0.00010688626}
-    m_Extent: {x: 0.0020382926, y: 0.0028134957, z: 0.002523809}
-  m_DirtyAABB: 0
 --- !u!1 &700278376
 GameObject:
   m_ObjectHideFlags: 0
