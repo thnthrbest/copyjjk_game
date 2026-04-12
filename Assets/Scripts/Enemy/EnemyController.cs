@@ -54,7 +54,6 @@ public class EnemyController : MonoBehaviour
     {
         // หมุนหน้าไปหาผู้เล่นแค่แกน Y (ไม่ก้มหัว)
         Vector3 direction = player.position - transform.position;
-        direction.y = 0f;
 
         if (direction != Vector3.zero)
         {
