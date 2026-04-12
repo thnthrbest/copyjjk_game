@@ -32,12 +32,14 @@ public class DamageData : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            //Debug.Log("โดน Player!");
+
             PlayerHealth hp = other.GetComponent<PlayerHealth>();
-            if (hp == null) return;
+            //if (hp == null) return;
 
             float dmg = damage > 0 ? damage : GetDamage(damageType);
             hp.TakeDamage(dmg, damageType.ToString());
-            
+            // Debug.Log($"Dealt {dmg} {damageType} damage to Player! โดนแล้วนะได้สัส");
             Destroy(gameObject);
         }
     }

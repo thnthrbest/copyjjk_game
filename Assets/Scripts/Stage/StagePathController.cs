@@ -112,6 +112,6 @@ public class StagePathController : MonoBehaviour
 
         moving = true;
 
-        Debug.Log("Moving to Point " + currentIndex);
+        //Debug.Log("Moving to Point " + currentIndex);
     }
 }

@@ -4,93 +4,116 @@ public class EnemyController : MonoBehaviour
 {
     [Header("Detection")]
     public float sightRange = 10f;
-    public LayerMask whatIsPlayer;
 
     [Header("Attack")]
     public GameObject projectilePrefab;
-    public Transform  firePoint;          // จุดยิงกระสุน (สร้าง Empty GameObject ไว้หน้า Enemy)
-    public float      projectileSpeed    = 20f;
-    public float      timeBetweenAttacks = 2f;
+    public Transform firePoint;
+    public float projectileSpeed = 40f;
+    public float timeBetweenAttacks = 2f;
 
-    [Header("Debug")]
-    public bool playerInSightRange = false;
+    [Header("Aim")]
+    public float aimHeightOffset = 26f; // ใช้กรณีไม่มี collider
 
     private Transform player;
-    private bool      alreadyAttacked = false;
+    private bool alreadyAttacked = false;
 
     Animator animator;
-     void Start()
+
+    void Start()
     {
         animator = GetComponent<Animator>();
     }
 
     void Awake()
     {
-        // หา Player อัตโนมัติ
         GameObject p = GameObject.FindWithTag("Player");
         if (p != null)
             player = p.transform;
         else
-            Debug.LogWarning("[Enemy] ไม่พบ Player! ตั้ง Tag = 'Player' ก่อนนะครับ");
+            Debug.LogWarning("[Enemy] ไม่พบ Player (Tag = Player)");
     }
 
     void Update()
     {
         if (player == null) return;
 
-        // ─── เช็คระยะ ───
         float dist = Vector3.Distance(transform.position, player.position);
-        playerInSightRange = dist <= sightRange;
 
-        if (playerInSightRange)
+        if (dist <= sightRange)
         {
-            animator.SetTrigger("attack");
-            LookAtPlayer();
+            LookAtPlayer(); // หมุนเฉพาะแกน Y
             TryAttack();
+
+            if (animator != null)
+                animator.SetTrigger("attack");
         }
     }
 
+    // =========================
+    // หมุนเฉพาะแกน Y
+    // =========================
     void LookAtPlayer()
     {
-        // หมุนหน้าไปหาผู้เล่นแค่แกน Y (ไม่ก้มหัว)
-        Vector3 direction = player.position - transform.position;
+        Vector3 dir = player.position - transform.position;
+        dir.y = 0f;
 
-        if (direction != Vector3.zero)
+        if (dir != Vector3.zero)
         {
-            Quaternion targetRot = Quaternion.LookRotation(direction);
-            transform.rotation   = Quaternion.Slerp(
-                transform.rotation, targetRot, 10f * Time.deltaTime
-            );
+            Quaternion rot = Quaternion.LookRotation(dir);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rot, 10f * Time.deltaTime);
         }
     }
 
+    // =========================
+    // ยิงกระสุน (เล็งแม่น)
+    // =========================
     void TryAttack()
     {
         if (alreadyAttacked) return;
 
-        // ─── ยิงกระสุน ───
         Transform spawnPoint = firePoint != null ? firePoint : transform;
 
         GameObject bullet = Instantiate(
             projectilePrefab,
             spawnPoint.position,
-            spawnPoint.rotation
+            Quaternion.identity
         );
 
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
+
         if (rb != null)
         {
-            rb.useGravity = false;   // กระสุนเป็นเส้นตรง ไม่ตกลงพื้น
-            rb.velocity   = spawnPoint.forward * projectileSpeed;
+            rb.useGravity = false;
+
+            // 🔥 เล็งไปที่ "กลาง collider จริง"
+            Vector3 targetPos;
+
+            Collider col = player.GetComponent<Collider>();
+
+            if (col != null)
+            {
+                targetPos = col.bounds.center; // 🔥 จุดสำคัญ
+            }
+            else
+            {
+                targetPos = player.position + Vector3.up * aimHeightOffset;
+            }
+
+            Vector3 dir = (targetPos - spawnPoint.position).normalized;
+
+            rb.velocity = dir * projectileSpeed;
+
+            // หมุนกระสุนให้ตรงทิศ
+            bullet.transform.forward = dir;
+
+            // 🔍 debug เส้นยิง
+            Debug.DrawLine(spawnPoint.position, targetPos, Color.red, 1f);
         }
 
-        // ─── ทำลายกระสุนหลัง 5 วิถ้าไม่โดนอะไร ───
         Destroy(bullet, 5f);
 
         alreadyAttacked = true;
         Invoke(nameof(ResetAttack), timeBetweenAttacks);
-
-        //Debug.Log("[Enemy] ยิงกระสุน!");
     }
 
     void ResetAttack()
@@ -98,13 +121,14 @@ public class EnemyController : MonoBehaviour
         alreadyAttacked = false;
     }
 
-    // ─── แสดง Gizmos ใน Editor ───
+    // =========================
+    // DEBUG
+    // =========================
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, sightRange);
 
-        // แสดงทิศยิง
         if (firePoint != null)
         {
             Gizmos.color = Color.red;

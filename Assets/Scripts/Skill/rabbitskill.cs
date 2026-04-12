@@ -8,6 +8,7 @@ public class rabbitskill : MonoBehaviour
     public GameObject shieldPrefab;
     public float      shieldRadius   = 5f;
     public LayerMask  bulletLayer;
+    public float distanceToBullet = 50f;
 
     [Header("Auto Settings")]
     public float activeDuration  = 20f;
@@ -38,6 +39,13 @@ public class rabbitskill : MonoBehaviour
 
     public void StartSkill()
     {
+        // ─── เช็ค Stack ก่อนใช้ ───
+        if (!PlayerEnergy.Instance.UseStack(1))
+        {
+            Debug.Log("[Skill] Stack ไม่พอ!");
+            return;
+        }
+
         isActive    = true;
         activeTimer = 0f;
         blockedBullets.Clear();
@@ -82,7 +90,7 @@ public class rabbitskill : MonoBehaviour
     void SpawnShieldBetween(Transform bullet)
 {
     Vector3    dirToBullet    = (bullet.position - transform.position).normalized;
-    Vector3    shieldPosition = transform.position + dirToBullet * 3.0f;
+    Vector3    shieldPosition = transform.position + dirToBullet * distanceToBullet;
     Quaternion shieldRotation = Quaternion.LookRotation(dirToBullet);
 
     GameObject shield = Instantiate(shieldPrefab, shieldPosition, shieldRotation);
