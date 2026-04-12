@@ -6,9 +6,13 @@ public class EnergyPickup : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        //if (!other.CompareTag("Player")) return;
+        if (other.CompareTag("Player"))
+        {
 
-        PlayerEnergy.Instance?.AddEnergy(energyAmount, "Pickup");
-        Destroy(gameObject);
+            PlayerEnergy.Instance?.AddEnergy(energyAmount, "Pickup");
+            Destroy(gameObject);
+        }
+
+        
     }
 }

@@ -12,6 +12,7 @@ public class EnemyHealth : MonoBehaviour
     {
         if(Health <= 0)
         {
+            PlayerEnergy.Instance?.OnKillEnemy();
             Destroy(gameObject);
         }
     }
