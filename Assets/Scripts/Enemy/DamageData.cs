@@ -41,6 +41,10 @@ public class DamageData : MonoBehaviour
             hp.TakeDamage(dmg, damageType.ToString());
             // Debug.Log($"Dealt {dmg} {damageType} damage to Player! โดนแล้วนะได้สัส");
             Destroy(gameObject);
+        }else if(other.CompareTag("Magic"))
+        {
+            Debug.Log("โดน rabbit!");
+            Destroy(gameObject);
         }
     }
 }

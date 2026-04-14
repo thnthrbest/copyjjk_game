@@ -54,9 +54,6 @@ public class PlayerHealth : MonoBehaviour
         isInvincible   = true;
         invincibleTimer = 0f;
 
-        Debug.Log($"[HP] โดน {damage} damage จาก {source} " +
-                  $"| เหลือ {currentHealth}/{maxHealth}");
-
         UpdateUI();
 
         if (currentHealth <= 0)

@@ -40,11 +40,24 @@ public class PlayerController : MonoBehaviour
 
         float moveX = 0f;
 
+        if (cmd == "Idle" || cmd == "Jump" || cmd == "Crouch" || cmd == "MoveForward")
+        {
+            animator.SetBool("left", false);
+            animator.SetBool("right", false);
+        }
+
         if (cmd == "MoveLeft")
+        {
             moveX = -moveSpeed;
+            animator.SetBool("left", true);
+        }
+            
 
         if (cmd == "MoveRight")
+        {   
+            animator.SetBool("right", true);
             moveX = moveSpeed;
+        }
 
         if (controller.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;

@@ -4954,7 +4954,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0348a1d494f84c048af86985f35ed5d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyAmount: 10
+  energyAmount: 100
 --- !u!108 &284474310
 Light:
   m_ObjectHideFlags: 0
@@ -5076,11 +5076,11 @@ Transform:
   m_GameObject: {fileID: 284474307}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -37, y: 5.7800293, z: 510}
+  m_LocalPosition: {x: -99.862076, y: 876.84174, z: -606.874}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 742842914}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &284959705
 GameObject:
@@ -12144,8 +12144,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 2.4822183, y: 1, z: 3.2707753}
-  m_Center: {x: -0.023512369, y: 0, z: 1.135387}
+  m_Size: {x: 2.5659256, y: 1.5478468, z: 3.2707756}
+  m_Center: {x: -0.06536651, y: 0.27392334, z: 1.135387}
 --- !u!1 &730417327
 GameObject:
   m_ObjectHideFlags: 0
@@ -12316,6 +12316,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1391863516}
+  - {fileID: 284474313}
   - {fileID: 6453221966776970052}
   - {fileID: 1497518990}
   - {fileID: 1984105779}
@@ -23589,7 +23591,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0348a1d494f84c048af86985f35ed5d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyAmount: 10
+  energyAmount: 100
 --- !u!108 &1391863513
 Light:
   m_ObjectHideFlags: 0
@@ -23711,11 +23713,11 @@ Transform:
   m_GameObject: {fileID: 1391863510}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -152, y: 5.7800293, z: 706}
+  m_LocalPosition: {x: -214.86208, y: 876.84174, z: -410.87402}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 742842914}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1394650861
 GameObject:
@@ -25372,7 +25374,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0348a1d494f84c048af86985f35ed5d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyAmount: 10
+  energyAmount: 100
 --- !u!108 &1497518993
 Light:
   m_ObjectHideFlags: 0
@@ -27602,7 +27604,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0348a1d494f84c048af86985f35ed5d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyAmount: 10
+  energyAmount: 100
 --- !u!108 &1594444166
 Light:
   m_ObjectHideFlags: 0
@@ -34069,7 +34071,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0348a1d494f84c048af86985f35ed5d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyAmount: 10
+  energyAmount: 100
 --- !u!108 &1984105781
 Light:
   m_ObjectHideFlags: 0
@@ -48196,7 +48198,7 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 1
-  m_Radius: 10
+  m_Radius: 11.5
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
@@ -48247,7 +48249,7 @@ MonoBehaviour:
     m_Bits: 128
   lockPrefab: {fileID: 861294634816843305, guid: 4bd3e7ccb3641b84aab166c364a7a649,
     type: 3}
-  bulletPrefab: {fileID: 637137020668109230, guid: 1247bc20c3466af46b98334cb1b76a6f,
+  bulletPrefab: {fileID: 1816917497622161671, guid: 907b4ae85c1515f409ace27243c9bb7c,
     type: 3}
   shootPoint: {fileID: 1015191688}
   shootCooldown: 0.4
@@ -48314,8 +48316,7 @@ MonoBehaviour:
   bulletLayer:
     serializedVersion: 2
     m_Bits: 256
-  distanceToBullet: 50
-  activeDuration: 1000
+  activeDuration: 20
   checkInterval: 0.3
   cooldown: 0.1
 --- !u!137 &7930946650538172134
@@ -48792,7 +48793,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0348a1d494f84c048af86985f35ed5d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyAmount: 10
+  energyAmount: 100
 --- !u!108 &8126360403268532644
 Light:
   m_ObjectHideFlags: 0
@@ -50514,5 +50515,3 @@ SceneRoots:
   - {fileID: 1888771363}
   - {fileID: 1551586481}
   - {fileID: 706431765}
-  - {fileID: 284474313}
-  - {fileID: 1391863516}
