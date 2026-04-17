@@ -11699,7 +11699,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf6eceb4c884a04fafdd896eeae2ca6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slowMotionScale: 0.2
+  slowMotionScale: 0.01
   normalTimeScale: 1
   enterSpeed: 5
   exitSpeed: 8
@@ -48173,8 +48173,8 @@ MonoBehaviour:
   moveSpeed: 60
   minX: -60
   maxX: 60
-  jumpForce: 50
-  gravity: -50
+  jumpForce: 75
+  gravity: -100
   crouchHeight: 1
   jumpCooldown: 0.3
   stagePathController: {fileID: 1874250782}
