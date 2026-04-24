@@ -284,6 +284,8 @@ public class HandInputReceiver : MonoBehaviour
         {
             case "rabbit":player.GetComponent<rabbitskill>().StartSkill();
             break;
+            case "bird": player.GetComponent<dogskill>().StartSkill();
+            break;
         }
     }
 
