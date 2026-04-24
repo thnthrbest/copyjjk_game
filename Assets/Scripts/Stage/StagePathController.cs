@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 [System.Serializable]
 public class StagePoint
@@ -15,8 +16,20 @@ public class StagePathController : MonoBehaviour
     public float moveSpeed = 6f;
     public float stopDistance = 0.5f;
 
+    public GameObject ps;
+    ParticleSystem particle;
+    ParticleSystem.EmissionModule emission;
+
+    
     int currentIndex = 0;
     public bool moving = true;
+
+    void Start()
+    {
+        particle = ps.GetComponent<ParticleSystem>();
+        emission = particle.emission;
+    }
+
 
     void Update()
     {
@@ -27,10 +40,12 @@ public class StagePathController : MonoBehaviour
         if (moving)
         {
             MoveForward(point.stopPoint);
+            emission.enabled = true;
         }
         else
         {
             CheckEnemies(point.enemyZone);
+            emission.enabled = false;
         }
     }
 

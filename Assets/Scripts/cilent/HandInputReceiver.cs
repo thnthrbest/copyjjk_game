@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 public class HandInputReceiver : MonoBehaviour
 {
     // ───── UDP (CONTROL) ─────
@@ -22,6 +23,12 @@ public class HandInputReceiver : MonoBehaviour
 
     public GameObject player;
 
+    public GameObject ui_skill, ui_attack;
+
+    public GameObject main_camera;
+
+    private DepthOfField depthOfField;
+    private SplitToning splitToning;
     // ───── STATE ─────
     public static string LeftHand    = "IDLE";
     public static string RightHand   = "NONE";
@@ -38,6 +45,22 @@ public class HandInputReceiver : MonoBehaviour
     {
         StartUDP();
         StartTCP();
+        Volume volume = main_camera.GetComponent<Volume>();
+
+        if (volume != null && volume.profile != null)
+        {
+            // ดึง Depth Of Field
+            if (volume.profile.TryGet(out depthOfField))
+            {
+                ///depthOfField.active = true;
+            }
+
+            // ดึง Split Toning
+            if (volume.profile.TryGet(out splitToning))
+            {
+                //splitToning.active = true;
+            }
+        }
     }
 
     void Update()
@@ -222,7 +245,14 @@ public class HandInputReceiver : MonoBehaviour
 
             // ─── เปิด Bullet Time ───
             if (BulletTime.Instance != null)
+            {
+                ui_skill.SetActive(true);
+                ui_attack.SetActive(false);
                 BulletTime.Instance.Enter();
+                depthOfField.active = true;
+                splitToning.active = true;
+            }
+                
         }
         else if (mode == "control")
         {
@@ -231,7 +261,15 @@ public class HandInputReceiver : MonoBehaviour
 
             // ─── ปิด Bullet Time ───
             if (BulletTime.Instance != null)
+            {
+                ui_skill.SetActive(false);
+                ui_attack.SetActive(true);
                 BulletTime.Instance.Exit();
+                depthOfField.active = false;
+                splitToning.active = false;
+            }
+
+                
         }
     }
 

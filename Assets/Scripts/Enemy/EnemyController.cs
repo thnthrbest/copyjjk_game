@@ -42,10 +42,8 @@ public class EnemyController : MonoBehaviour
         if (dist <= sightRange)
         {
             LookAtPlayer(); // หมุนเฉพาะแกน Y
-            TryAttack();
-
-            if (animator != null)
-                animator.SetTrigger("attack");
+            if (animator != null)animator.SetTrigger("attack");
+            //TryAttack();
         }
     }
 
@@ -70,6 +68,9 @@ public class EnemyController : MonoBehaviour
     void TryAttack()
     {
         if (alreadyAttacked) return;
+        
+            
+
 
         Transform spawnPoint = firePoint != null ? firePoint : transform;
 
