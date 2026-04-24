@@ -11,7 +11,12 @@ public class EnemyChase : MonoBehaviour
 
     private Transform player;
     private bool isChasing = false;
+    Animator animator;
 
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+    }
     void Awake()
     {
         GameObject p = GameObject.FindWithTag("Player");
@@ -36,6 +41,7 @@ public class EnemyChase : MonoBehaviour
         if (isChasing)
         {
             LookAtPlayer();
+            animator.SetBool("attack", true);
             MoveToPlayer();
         }
     }
