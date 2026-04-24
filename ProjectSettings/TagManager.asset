@@ -7,6 +7,7 @@ TagManager:
   - Enemy
   - Magic
   - Bullet
+  - BulletDestroyer
   layers:
   - Default
   - TransparentFX
