@@ -1065,7 +1065,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dfcdb7bb7a81f2478bac1672bbcd748, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sightRange: 500
+  sightRange: 350
   projectilePrefab: {fileID: 2385836873351503238, guid: bc755408d2494d847ab15d7dbfe480a8,
     type: 3}
   firePoint: {fileID: 8790514161214810158}
