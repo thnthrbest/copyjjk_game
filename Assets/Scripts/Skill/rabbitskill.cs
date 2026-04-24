@@ -38,6 +38,12 @@ public class rabbitskill : MonoBehaviour
 
     public void StartSkill()
     {
+        PlayerHealth playerHealth = GetComponent<PlayerHealth>();
+        if (playerHealth != null)
+        {
+            playerHealth.godMode = true; // เปิดโหมดเทพ
+        }
+
         isActive    = true;
         activeTimer = 0f;
         blockedBullets.Clear();
@@ -48,6 +54,11 @@ public class rabbitskill : MonoBehaviour
 
     void StopSkill()
     {
+        PlayerHealth playerHealth = GetComponent<PlayerHealth>();
+        if (playerHealth != null)
+        {
+            playerHealth.godMode = false; // ปิดโหมดเทพ
+        }
         isActive = false;
         blockedBullets.Clear();
         CancelInvoke(nameof(TryBlockBullet));

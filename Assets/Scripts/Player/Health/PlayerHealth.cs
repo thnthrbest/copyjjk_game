@@ -8,6 +8,7 @@ public class PlayerHealth : MonoBehaviour
     public float currentHealth;
 
     [Header("UI")]
+    public Image  die;
     public Slider healthSlider;
     public Image  healthFill;       // Image ของ Slider Fill
 
@@ -19,9 +20,13 @@ public class PlayerHealth : MonoBehaviour
     [Header("Invincible")]
     public float invincibleTime = 0.5f;       // โดนดาเมจซ้ำไม่ได้กี่วิ
     private float invincibleTimer = 0f;
+
+    public bool godMode = false;              // โหมดเทพ (ไม่ตาย)
     private bool  isInvincible   = false;
 
     private bool isDead = false;
+
+
 
     void Start()
     {
@@ -48,7 +53,7 @@ public class PlayerHealth : MonoBehaviour
     // ─────────────────────────────
     public void TakeDamage(float damage, string source = "Unknown")
     {
-        if (isDead || isInvincible) return;
+        if (isDead || isInvincible || godMode) return;
 
         currentHealth  = Mathf.Max(0, currentHealth - damage);
         isInvincible   = true;
@@ -88,6 +93,7 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
+        die.gameObject.SetActive(true);
        healthFill.gameObject.SetActive(false);
         if (isDead) return;
         isDead = true;

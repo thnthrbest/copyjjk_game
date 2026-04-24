@@ -159,16 +159,4 @@ public class PlayerEnergy : MonoBehaviour
             }
         }
     }
-
-    void OnGUI()
-    {
-        GUIStyle style  = new GUIStyle();
-        style.fontSize  = 18;
-        style.fontStyle = FontStyle.Bold;
-        style.normal.textColor = Color.cyan;
-
-        GUI.Label(new Rect(10, 100, 400, 30),
-            $"Energy: {currentEnergy:F0}/{maxEnergyPerStack} | " +
-            $"Stack: {currentStacks}/{maxStacks}", style);
-    }
 }
