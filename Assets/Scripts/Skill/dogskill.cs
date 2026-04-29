@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class DogSkill : MonoBehaviour
+public class dogskill : MonoBehaviour
 {
     [Header("Dog Settings")]
     public GameObject dogPrefab; 
