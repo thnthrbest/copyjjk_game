@@ -33,6 +33,8 @@ public class BossController : MonoBehaviour
     private List<System.Func<IEnumerator>> skillList;
     private int lastSkillIndex = -1;
 
+    public Animator animator;
+
     // =========================
     void Start()
     {
@@ -86,9 +88,10 @@ public class BossController : MonoBehaviour
 
             float duration = Random.Range(basicMinTime, basicMaxTime);
             yield return StartCoroutine(BasicAttackPhase(duration));
-
+            animator.SetBool("attack_nm", false);
             int skillIndex = GetRandomSkillIndex();
-            yield return StartCoroutine(skillList[skillIndex]());
+            //yield return StartCoroutine(skillList[skillIndex]());
+            yield return StartCoroutine(skillList[0]());
 
             lastSkillIndex = skillIndex;
 
@@ -100,6 +103,7 @@ public class BossController : MonoBehaviour
     // =========================
     IEnumerator BasicAttackPhase(float duration)
     {
+        animator.SetBool("attack_nm", true);
         float timer = 0f;
         float shootTimer = 0f;
 

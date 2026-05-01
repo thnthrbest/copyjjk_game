@@ -28,18 +28,27 @@ public class MeteorSkill : MonoBehaviour
     public Transform rightTarget;
 
     [Header("Timing")]
-    public float delayBeforeIndicator = 0.5f;
+    public float delayBeforeIndicator = 1f;
     public float delayBeforeHit = 1f;
     public float delayBetweenRounds = 0.5f; // 🔥 เว้นระหว่างรอบ
+
+
+    public Animator animator; // 🔥 เพิ่ม Animator
 
     // =========================
     public IEnumerator Execute()
     {
+        
+        animator.SetBool("skill1", true); // 🔥 เริ่ม Animatior
+        yield return new WaitForSeconds(2f);
+        yield return StartCoroutine(XXX());
+    }
+    public IEnumerator XXX()
+    {
         int loopCount = 3; // 🔥 จำนวนรอบ
-
         for (int round = 0; round < loopCount; round++)
         {
-            // 🔥 ยิงขึ้นฟ้า
+            // 🔥 ยิงขึ้นฟ้า  ใช้ animetion เรียก
             ShootToSkyDual();
 
             yield return new WaitForSeconds(delayBeforeIndicator);
@@ -93,6 +102,7 @@ public class MeteorSkill : MonoBehaviour
             if (round < loopCount - 1)
                 yield return new WaitForSeconds(delayBetweenRounds);
         }
+        animator.SetBool("skill1", false); // 🔥 จบ Animation
     }
 
     // =========================

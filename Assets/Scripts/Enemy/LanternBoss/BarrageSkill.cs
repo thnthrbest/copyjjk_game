@@ -22,6 +22,7 @@ public class BarrageSkill : MonoBehaviour
 
     private Vector3 lastRandomPoint;
 
+    public Animator animator;
     // =========================
     public IEnumerator Execute()
     {
@@ -30,10 +31,12 @@ public class BarrageSkill : MonoBehaviour
 
         while (timer < duration)
         {
+            animator.SetBool("attack_nm", true);
             Shoot();
             yield return new WaitForSeconds(fireInterval);
             timer += fireInterval;
         }
+        animator.SetBool("attack_nm", false);
     }
 
     // =========================
@@ -61,6 +64,7 @@ public class BarrageSkill : MonoBehaviour
     // =========================
     Vector3 GetTargetPosition()
     {
+        
         int roll = Random.Range(0, 100);
 
         int randomMax = randomShotChance;
@@ -69,6 +73,7 @@ public class BarrageSkill : MonoBehaviour
         // 🔴 ยิงมั่วในโซน
         if (roll < randomMax)
         {
+
             return GetRandomPointInBox();
         }
         // 🔵 ยิงตรงผู้เล่น
@@ -83,27 +88,27 @@ public class BarrageSkill : MonoBehaviour
 
     // =========================
     Vector3 GetRandomPointInBox()
-{
-    if (attackZone == null) return transform.position;
-
-    Bounds b = attackZone.bounds;
-
-    Vector3 point;
-    int attempts = 0;
-
-    do
     {
-        point = new Vector3(
-            Random.Range(b.min.x, b.max.x),
-            Random.Range(b.min.y, b.max.y), // 🔥 แก้ตรงนี้
-            Random.Range(b.min.z, b.max.z)
-        );
+        if (attackZone == null) return transform.position;
 
-        attempts++;
+        Bounds b = attackZone.bounds;
 
-    } while (Vector3.Distance(point, lastRandomPoint) < 2f && attempts < 10);
+        Vector3 point;
+        int attempts = 0;
 
-    lastRandomPoint = point;
-    return point;
-}
+        do
+        {
+            point = new Vector3(
+                Random.Range(b.min.x, b.max.x),
+                Random.Range(b.min.y, b.max.y), // 🔥 แก้ตรงนี้
+                Random.Range(b.min.z, b.max.z)
+            );
+
+            attempts++;
+
+        } while (Vector3.Distance(point, lastRandomPoint) < 2f && attempts < 10);
+
+        lastRandomPoint = point;
+        return point;
+    }
 }

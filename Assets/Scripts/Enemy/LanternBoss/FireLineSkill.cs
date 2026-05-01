@@ -16,14 +16,20 @@ public class FireLineSkill : MonoBehaviour
     public int waveCount = 5;
     public float delayBetweenWaves = 1.5f;
 
+    public Animator animator;
+
     public IEnumerator Execute()
     {
+        animator.SetBool("skill_line", true);
+        yield return new WaitForSeconds(3f);
         for (int i = 0; i < waveCount; i++)
         {
             SpawnFireLine();
             yield return new WaitForSeconds(delayBetweenWaves);
         }
+        animator.SetBool("skill_line", false);
     }
+    
 
     void SpawnFireLine()
     {
