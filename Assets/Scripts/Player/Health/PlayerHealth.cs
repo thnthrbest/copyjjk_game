@@ -26,6 +26,9 @@ public class PlayerHealth : MonoBehaviour
 
     private bool isDead = false;
 
+    public float activeDuration  = 0f;
+
+
 
 
     void Start()
@@ -36,6 +39,10 @@ public class PlayerHealth : MonoBehaviour
 
     void Update()
     {
+        if(activeDuration > 0f)
+        {
+            activeDuration -= Time.deltaTime;
+        }
         // ─── นับเวลา Invincible ───
         if (isInvincible)
         {

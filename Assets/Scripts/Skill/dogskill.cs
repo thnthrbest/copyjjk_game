@@ -45,7 +45,7 @@ public class dogskill : MonoBehaviour
             Debug.LogWarning("[DogSkill] ยังไม่ได้ใส่ dogPrefab");
             return;
         }
-
+        playerHealth.activeDuration = activeDuration;
         Transform point = spawnPoint != null ? spawnPoint : transform;
 
         // ตำแหน่งซ้าย

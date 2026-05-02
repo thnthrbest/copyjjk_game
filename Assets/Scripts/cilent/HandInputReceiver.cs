@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.UI;
 public class HandInputReceiver : MonoBehaviour
 {
     // ───── UDP (CONTROL) ─────
@@ -22,6 +23,8 @@ public class HandInputReceiver : MonoBehaviour
     Thread        tcpThread;
 
     public GameObject player;
+    public GameObject skill;
+    public Sprite[] animalSprite;
 
     public GameObject ui_skill, ui_attack;
 
@@ -280,11 +283,22 @@ public class HandInputReceiver : MonoBehaviour
 
     void OnGestureDetected(string gesture)
     {
+        var img = skill.GetComponent<Image>();
          switch (gesture)
         {
-            case "rabbit":player.GetComponent<rabbitskill>().StartSkill();
+            case "rabbit":
+                {
+
+                    img.sprite = animalSprite[0];
+                    player.GetComponent<rabbitskill>().StartSkill();
+                }
+                
             break;
-            case "bird": player.GetComponent<dogskill>().StartSkill();
+            case "bird": 
+                {
+                    img.sprite = animalSprite[1];
+                    player.GetComponent<dogskill>().StartSkill();
+                }
             break;
         }
     }

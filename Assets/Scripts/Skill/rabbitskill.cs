@@ -47,7 +47,7 @@ public class rabbitskill : MonoBehaviour
         isActive    = true;
         activeTimer = 0f;
         blockedBullets.Clear();
-
+        playerHealth.activeDuration = activeDuration; // บอก PlayerHealth ว่า skill กำลังทำงาน
         InvokeRepeating(nameof(TryBlockBullet), 0f, checkInterval);
         Debug.Log($"[Shield] Skill เปิดแล้ว! ทำงาน {activeDuration} วิ");
     }
