@@ -16,9 +16,9 @@ public class StagePathController : MonoBehaviour
     public float moveSpeed = 6f;
     public float stopDistance = 0.5f;
 
-    public GameObject ps;
-    ParticleSystem particle;
-    ParticleSystem.EmissionModule emission;
+    public GameObject ps,ps2;
+    ParticleSystem particle,particle2;
+    ParticleSystem.EmissionModule emission,emission2;
 
     
     int currentIndex = 0;
@@ -27,7 +27,9 @@ public class StagePathController : MonoBehaviour
     void Start()
     {
         particle = ps.GetComponent<ParticleSystem>();
+        particle2 = ps2.GetComponent<ParticleSystem>();
         emission = particle.emission;
+        emission2 = particle2.emission;
     }
 
 
@@ -41,11 +43,13 @@ public class StagePathController : MonoBehaviour
         {
             MoveForward(point.stopPoint);
             emission.enabled = true;
+            emission2.enabled = true;
         }
         else
         {
             CheckEnemies(point.enemyZone);
             emission.enabled = false;
+            emission2.enabled = false;
         }
     }
 

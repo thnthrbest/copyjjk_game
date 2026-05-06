@@ -90,8 +90,8 @@ public class BossController : MonoBehaviour
             yield return StartCoroutine(BasicAttackPhase(duration));
             animator.SetBool("attack_nm", false);
             int skillIndex = GetRandomSkillIndex();
-            //yield return StartCoroutine(skillList[skillIndex]());
-            yield return StartCoroutine(skillList[0]());
+            yield return StartCoroutine(skillList[skillIndex]());
+            //yield return StartCoroutine(skillList[0]());
 
             lastSkillIndex = skillIndex;
 
