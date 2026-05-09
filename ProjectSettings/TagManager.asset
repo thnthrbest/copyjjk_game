@@ -8,6 +8,7 @@ TagManager:
   - Magic
   - Bullet
   - BulletDestroyer
+  - dog
   layers:
   - Default
   - TransparentFX

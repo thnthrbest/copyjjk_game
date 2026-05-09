@@ -71,10 +71,8 @@ public class dogobj : MonoBehaviour
 
         foreach (GameObject enemy in enemies)
         {
-            float yDiff = enemy.transform.position.y - transform.position.y;
-
-            bool isAirEnemy = yDiff >= airEnemyHeight;
-            bool isGroundEnemy = yDiff < airEnemyHeight;
+            bool isAirEnemy = enemy.transform.position.y >= airEnemyHeight;
+            bool isGroundEnemy = enemy.transform.position.y < airEnemyHeight;
 
             // กรองตามประเภทที่ต้องการ
             if (isGroundEnemy && !targetGroundEnemy)
@@ -93,11 +91,6 @@ public class dogobj : MonoBehaviour
         }
 
         target = nearestTarget;
-
-        if (target != null)
-        {
-            Debug.Log("[Dog] Target Found : " + target.name);
-        }
     }
 
     // =====================================
@@ -106,7 +99,7 @@ public class dogobj : MonoBehaviour
     public void setmove()
     {
         move = true;
-        player.GetComponent<PlayerHealth>().godMode = false; // ปิดโหมดเทพ
+        //player.GetComponent<PlayerHealth>().godMode = false; // ปิดโหมดเทพ
     }
 
     // =====================================
@@ -163,21 +156,19 @@ public class dogobj : MonoBehaviour
 
         float dist = Vector3.Distance(transform.position, targetPos);
 
-        if (dist <= stopDistance)
-        {
-            Debug.Log("[Dog] Hit Target");
-            Destroy(gameObject);
-        }
+        // if (dist <= stopDistance)
+        // {
+        //     Destroy(gameObject);
+        // }
     }
 
     // =====================================
     // ชนแล้วหาย
     // =====================================
-    private void OnTriggerEnter(Collider other)
+    void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag(enemyTag))
+        if (other.CompareTag("Enemy"))
         {
-            Debug.Log("[Dog] Hit Enemy");
             Destroy(other.gameObject); // ทำลายศัตรูที่ชน (ถ้าต้องการ)
             Destroy(gameObject);
         }
