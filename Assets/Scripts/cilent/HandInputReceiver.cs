@@ -33,7 +33,7 @@ public class HandInputReceiver : MonoBehaviour
     private DepthOfField depthOfField;
     private SplitToning splitToning;
     // ───── STATE ─────
-    public static string LeftHand    = "IDLE";
+    public static string LeftHand    = "Idle";
     public static string RightHand   = "NONE";
     public static string Gesture     = "dont";
     public static string CurrentMode = "control";  // ← โหมดปัจจุบัน
@@ -240,7 +240,7 @@ public class HandInputReceiver : MonoBehaviour
     // =========================
     // EVENTS — แก้ตามต้องการ
     // =========================
-    void OnModeChanged(string mode)
+    public void OnModeChanged(string mode)
     {
         if (mode == "gesture")
         {
@@ -275,13 +275,24 @@ public class HandInputReceiver : MonoBehaviour
                 
         }
     }
+    public void closebullet()
+    {
+        if (BulletTime.Instance != null)
+        {
+            ui_skill.SetActive(false);
+            ui_attack.SetActive(true);
+            BulletTime.Instance.Exit();
+            depthOfField.active = false;
+            splitToning.active = false;
+        }
+    }
 
     void OnGestureDont()
     {
         // มือหายหรือไม่แน่ใจ
     }
 
-    void OnGestureDetected(string gesture)
+    public void OnGestureDetected(string gesture)
     {
         var img = skill.GetComponent<Image>();
          switch (gesture)

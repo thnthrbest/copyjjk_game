@@ -124,7 +124,7 @@ public class PlayerCombatLock : MonoBehaviour
         if (input == "AIM_UP" || input == "AIM_DOWN")
         {
             animator.SetTrigger("attack");
-            Shoot();
+            //Shoot();
         }
     }
 
@@ -158,7 +158,7 @@ public class PlayerCombatLock : MonoBehaviour
         SetTarget(enemiesInRange[index]);
     }
 
-    void Shoot()
+    public void Shoot()
     {
         if (Time.time < nextShootTime) return;
         if (currentTarget == null) return;

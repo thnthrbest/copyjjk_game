@@ -40,20 +40,23 @@ public class PlayerController : MonoBehaviour
 
         float moveX = 0f;
 
-        if (cmd == "Idle" || cmd == "Jump" || cmd == "Crouch" || cmd == "MoveForward")
+        if (string.Equals(cmd, "Idle", System.StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(cmd, "Jump", System.StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(cmd, "Crouch", System.StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(cmd, "MoveForward", System.StringComparison.OrdinalIgnoreCase))
         {
             animator.SetBool("left", false);
             animator.SetBool("right", false);
         }
 
-        if (cmd == "MoveLeft")
+        if (string.Equals(cmd, "MoveLeft", System.StringComparison.OrdinalIgnoreCase))
         {
             moveX = -moveSpeed;
             animator.SetBool("left", true);
         }
             
 
-        if (cmd == "MoveRight")
+        if (string.Equals(cmd, "MoveRight", System.StringComparison.OrdinalIgnoreCase))
         {   
             animator.SetBool("right", true);
             moveX = moveSpeed;
@@ -62,8 +65,8 @@ public class PlayerController : MonoBehaviour
         if (controller.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
 
-        if (cmd == "Jump"
-            && lastCommand != "Jump"
+        if (string.Equals(cmd, "Jump", System.StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(lastCommand, "Jump", System.StringComparison.OrdinalIgnoreCase)
             && controller.isGrounded
             && Time.time - lastJumpTime >= jumpCooldown)
         {
