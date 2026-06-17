@@ -111,20 +111,16 @@ public class PlayerCombatLock : MonoBehaviour
 
         lastInput = input;
 
-        if (input == "AIM_LEFT")
-        {
-            ChangeTargetLeft();
-        }
-
-        if (input == "AIM_RIGHT")
+        //if (input == "SWITCH_TARGET")
+        if (input == "AIM")
         {
             ChangeTargetRight();
         }
 
-        if (input == "AIM_UP" || input == "AIM_DOWN")
+        if (input == "SHOOT")
         {
             animator.SetTrigger("attack");
-            //Shoot();
+            Shoot();
         }
     }
 
