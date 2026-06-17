@@ -120,7 +120,7 @@ public class PlayerCombatLock : MonoBehaviour
         if (input == "SHOOT")
         {
             animator.SetTrigger("attack");
-            Shoot();
+            //Shoot();
         }
     }
 
