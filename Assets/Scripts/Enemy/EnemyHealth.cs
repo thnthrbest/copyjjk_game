@@ -23,5 +23,10 @@ public class EnemyHealth : MonoBehaviour
             Health -= Damage;
             Debug.Log("hit"); 
         }
+         if (other.CompareTag("dog"))
+        {
+            Destroy(gameObject);
+             Debug.Log("โดนหมาแล้วตาย");
+        }
     }
 }

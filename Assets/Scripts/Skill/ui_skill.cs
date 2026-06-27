@@ -16,10 +16,11 @@ public class ui_skill : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    // public void animateSkill()
-    // {
+    public void animateSkill()
+    {
+        playerHealth.activeDuration = 20f;
         
-    // }
+    }
 
     public void updateTimer()
     {

@@ -58,17 +58,4 @@ public class BulletTime : MonoBehaviour
         Time.timeScale      = 1f;
         Time.fixedDeltaTime = 0.02f;
     }
-
-    void OnGUI()
-    {
-        GUIStyle style  = new GUIStyle();
-        style.fontSize  = 18;
-        style.fontStyle = FontStyle.Bold;
-
-        if (isActive)
-        {
-            style.normal.textColor = Color.cyan;
-            GUI.Label(new Rect(10, 70, 300, 30), "BULLET TIME ACTIVE", style);
-        }
-    }
 }   

@@ -80,6 +80,12 @@ public class EnemyChase : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+             Debug.Log("[EnemyChase] โดนผู้เล่นแล้ว");
+            Destroy(gameObject);
+        }
+        if (other.CompareTag("dog"))
+        {
+            Debug.Log("[EnemyChase] โดนหมาแล้ว");
             Destroy(gameObject);
         }
     }

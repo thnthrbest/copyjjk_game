@@ -1447,7 +1447,7 @@ GameObject:
   - component: {fileID: 7036286606926331988}
   m_Layer: 0
   m_Name: dog1
-  m_TagString: Untagged
+  m_TagString: dog
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1505,10 +1505,11 @@ MonoBehaviour:
   detectionRange: 600
   targetGroundEnemy: 1
   targetAirEnemy: 0
-  groundEnemyTag: Enemy
-  airEnemyTag: AirEnemy
+  enemyTag: Enemy
+  airEnemyHeight: 50
   moveSpeed: 100
   rotationSpeed: 8
+  stopDistance: 1.2
 --- !u!95 &7036286606926331988
 Animator:
   serializedVersion: 5
