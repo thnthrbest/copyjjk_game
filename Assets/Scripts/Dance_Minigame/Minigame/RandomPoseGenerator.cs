@@ -5,30 +5,42 @@ using System.IO;
 #endif
 
 /// <summary>
-/// สุ่มท่า "ครั้งเดียว" แล้วใช้ค่าเดียวกันนั้นทำ 2 อย่างพร้อมกัน:
-///   1) ส่งให้ DancePoseEvaluator ใช้เป็นเป้าหมายเช็คท่าจริงของผู้เล่น
-///   2) ส่งให้ PoseSilhouetteBuilder ใช้วาดเงาใบ้ท่าให้ผู้เล่นทำตาม
-///
-/// ดึงจำนวนขั้นจาก FingerToLimbMapper โดยตรง
-/// ไม่ต้องตั้งค่าจำนวนขั้นซ้ำที่นี่ — แก้ที่ stepAngles ใน FingerToLimbMapper ที่เดียวพอ
+/// สุ่มชิ้นส่วนเดียวต่อท่า แล้วให้ผู้เล่นขยับเฉพาะส่วนนั้น
+/// ชิ้นส่วนที่สุ่มได้จะเปลี่ยนสีบน SilhouetteCharacter เพื่อบอกผู้เล่น
+/// ชิ้นส่วนอื่นคงท่าเดิมไว้ ไม่ต้องขยับและไม่นำมาเช็ค
 /// </summary>
 public class RandomPoseGenerator : MonoBehaviour
 {
-    [Header("ดึงจำนวนขั้นจาก FingerToLimbMapper โดยตรง (ไม่ต้องตั้งซ้ำ)")]
-    [Tooltip("ลาก FingerToLimbMapper ที่ติดอยู่บน HandSystem มาใส่")]
+    // ชิ้นส่วนที่สุ่มได้ — ตรงกับ field ใน FingerToLimbMapper และ DancePose
+    public enum LimbPart
+    {
+        LeftArmLift, LeftArmSwing,
+        RightArmLift, RightArmSwing,
+        LeftLegLift, LeftLegSwing,
+        RightLegLift, RightLegSwing
+    }
+
+    [Header("ดึงการตั้งค่าจาก FingerToLimbMapper")]
     public FingerToLimbMapper sourceMapper;
 
-    [Header("ค่าเริ่มต้นของ Pose ที่สุ่มสร้าง")]
-    public float defaultTolerance = 0.15f;
+    [Header("ค่าเริ่มต้น")]
+    public float defaultTolerance = 0.2f;
     public float defaultHoldTime  = 1.0f;
 
-    [Header("ปลายทางที่จะรับท่าเดียวกัน (ต้องใส่ทั้งคู่)")]
-    public DancePoseEvaluator      evaluator;
-    public PoseSilhouetteBuilder   silhouetteBuilder;
+    [Header("ปลายทาง")]
+    public DancePoseEvaluator    evaluator;
+    public PoseSilhouetteBuilder silhouetteBuilder;
 
-    [Header("เริ่มสุ่มท่าแรกอัตโนมัติตอน Start หรือไม่")]
+    [Header("สีไฮไลต์ชิ้นส่วนที่ต้องขยับ")]
+    public Color highlightColor = Color.yellow;
+
+    [Header("เริ่มอัตโนมัติตอน Start")]
     public bool autoStartOnPlay = true;
 
+    /// <summary>ชิ้นส่วนที่สุ่มได้ในรอบปัจจุบัน</summary>
+    public LimbPart CurrentLimb { get; private set; }
+
+    /// <summary>ท่าปัจจุบัน (มีค่าแค่ชิ้นส่วนที่สุ่ม ที่เหลือ = 0)</summary>
     public DancePose CurrentChallenge { get; private set; }
 
     readonly System.Random _rng = new System.Random();
@@ -51,115 +63,114 @@ public class RandomPoseGenerator : MonoBehaviour
     void HandlePoseComplete(int _) => GenerateNewChallenge();
 
     // ────────────────────────────────────────────────
-    // สุ่มท่าใหม่และส่งไปทั้ง evaluator และ silhouette พร้อมกัน
+    // สุ่มชิ้นส่วนเดียว → อัปเดต evaluator + silhouette
     // ────────────────────────────────────────────────
 
     [ContextMenu("สุ่มท่าใหม่ทันที")]
     public DancePose GenerateNewChallenge()
     {
-        DancePose pose = GenerateRandomPose();
+        // 1) สุ่มว่าจะให้ขยับชิ้นส่วนไหน
+        var allParts = System.Enum.GetValues(typeof(LimbPart));
+        CurrentLimb  = (LimbPart)allParts.GetValue(_rng.Next(allParts.Length));
+
+        // 2) สุ่มค่าองศา (step) ของชิ้นส่วนนั้น
+        float targetValue = RandomStepValue(GetMap(CurrentLimb));
+
+        // 3) สร้าง DancePose ที่มีค่าแค่ชิ้นส่วนที่สุ่ม ที่เหลือ = -1 (ไม่เช็ค)
+        DancePose pose   = ScriptableObject.CreateInstance<DancePose>();
+        pose.poseName    = $"{CurrentLimb}_{_rng.Next(100, 999)}";
+        pose.tolerance   = defaultTolerance;
+        pose.holdTime    = defaultHoldTime;
+
+        // ตั้งทุกอันเป็น -1 ก่อน (หมายถึง "ไม่ต้องเช็ค")
+        pose.leftArmLift   = -1f; pose.leftArmSwing  = -1f;
+        pose.leftLegLift   = -1f; pose.leftLegSwing  = -1f;
+        pose.rightArmLift  = -1f; pose.rightArmSwing = -1f;
+        pose.rightLegLift  = -1f; pose.rightLegSwing = -1f;
+
+        // ใส่ค่าเฉพาะชิ้นส่วนที่สุ่มมา
+        SetPoseValue(pose, CurrentLimb, targetValue);
+
         CurrentChallenge = pose;
 
-        if (evaluator        != null) evaluator.SetPose(pose);
-        if (silhouetteBuilder != null) silhouetteBuilder.ApplyPose(pose);
+        // 4) ส่งให้ evaluator เช็คเฉพาะชิ้นส่วนนั้น
+        if (evaluator != null)
+            evaluator.SetPose(pose);
 
-        Debug.Log(
-            $"[RandomPoseGenerator] New pose: {pose.poseName}\n" +
-            $"L: armLift={pose.leftArmLift:F2} armSwing={pose.leftArmSwing:F2} " +
-            $"legLift={pose.leftLegLift:F2} legSwing={pose.leftLegSwing:F2}\n" +
-            $"R: armLift={pose.rightArmLift:F2} armSwing={pose.rightArmSwing:F2} " +
-            $"legLift={pose.rightLegLift:F2} legSwing={pose.rightLegSwing:F2}");
+        // 5) บอก silhouette ให้ไฮไลต์ชิ้นส่วนที่ต้องขยับ
+        if (silhouetteBuilder != null)
+        {
+            silhouetteBuilder.ResetHighlight();
+            silhouetteBuilder.ApplyPartialPose(CurrentLimb, targetValue, highlightColor);
+        }
 
+        Debug.Log($"[RandomPoseGenerator] Limb: {CurrentLimb} | Value: {targetValue:F2}");
         return pose;
     }
 
     // ────────────────────────────────────────────────
-    // ดึงจำนวนขั้นจาก stepAngles ของ map แล้วสุ่ม step
+    // Helpers
     // ────────────────────────────────────────────────
 
-    /// <summary>
-    /// ดึงจำนวน step จาก stepAngles ของ map
-    /// สุ่ม index แล้วแปลงเป็น 0-1 ให้ตรงกับ step นั้นพอดี
-    /// เช่น stepAngles มี 3 ค่า → สุ่มได้ 0.0, 0.5, 1.0
-    /// </summary>
     float RandomStepValue(FingerToLimbMapper.FingerJointMap map)
     {
-        if (map == null || map.stepAngles == null || map.stepAngles.Length <= 1)
-            return 0f;
-
+        if (map == null || map.stepAngles == null || map.stepAngles.Length <= 1) return 0f;
         int steps = map.stepAngles.Length;
         int idx   = _rng.Next(0, steps);
         return idx / (float)(steps - 1);
     }
 
-    public DancePose GenerateRandomPose(string poseName = null)
+    FingerToLimbMapper.FingerJointMap GetMap(LimbPart part)
     {
-        DancePose pose = ScriptableObject.CreateInstance<DancePose>();
-        pose.poseName  = string.IsNullOrEmpty(poseName)
-            ? $"Random_{_rng.Next(1000, 9999)}"
-            : poseName;
-        pose.tolerance = defaultTolerance;
-        pose.holdTime  = defaultHoldTime;
-
-        if (sourceMapper != null)
+        if (sourceMapper == null) return null;
+        return part switch
         {
-            // ดึงจำนวนขั้นจาก FingerToLimbMapper โดยตรง
-            // ค่าที่ได้จะตรงกับ stepAngles ของ mapper เสมอ ไม่มีการตั้งซ้ำ
-            pose.leftArmLift   = RandomStepValue(sourceMapper.leftArmLift);
-            pose.leftArmSwing  = RandomStepValue(sourceMapper.leftArmSwing);
-            pose.leftLegLift   = RandomStepValue(sourceMapper.leftLegLift);
-            pose.leftLegSwing  = RandomStepValue(sourceMapper.leftLegSwing);
-            pose.rightArmLift  = RandomStepValue(sourceMapper.rightArmLift);
-            pose.rightArmSwing = RandomStepValue(sourceMapper.rightArmSwing);
-            pose.rightLegLift  = RandomStepValue(sourceMapper.rightLegLift);
-            pose.rightLegSwing = RandomStepValue(sourceMapper.rightLegSwing);
-        }
-        else
-        {
-            Debug.LogWarning("[RandomPoseGenerator] sourceMapper เป็น null — ใช้การสุ่มแบบ continuous แทน");
-            pose.leftArmLift   = (float)_rng.NextDouble();
-            pose.leftArmSwing  = (float)_rng.NextDouble();
-            pose.leftLegLift   = (float)_rng.NextDouble();
-            pose.leftLegSwing  = (float)_rng.NextDouble();
-            pose.rightArmLift  = (float)_rng.NextDouble();
-            pose.rightArmSwing = (float)_rng.NextDouble();
-            pose.rightLegLift  = (float)_rng.NextDouble();
-            pose.rightLegSwing = (float)_rng.NextDouble();
-        }
-
-        return pose;
+            LimbPart.LeftArmLift   => sourceMapper.leftArmLift,
+            LimbPart.LeftArmSwing  => sourceMapper.leftArmSwing,
+            LimbPart.RightArmLift  => sourceMapper.rightArmLift,
+            LimbPart.RightArmSwing => sourceMapper.rightArmSwing,
+            LimbPart.LeftLegLift   => sourceMapper.leftLegLift,
+            LimbPart.LeftLegSwing  => sourceMapper.leftLegSwing,
+            LimbPart.RightLegLift  => sourceMapper.rightLegLift,
+            LimbPart.RightLegSwing => sourceMapper.rightLegSwing,
+            _                      => null
+        };
     }
 
-    public long TotalPossibleCombinations()
+    void SetPoseValue(DancePose pose, LimbPart part, float value)
     {
-        if (sourceMapper == null) return 0;
-        long s(FingerToLimbMapper.FingerJointMap m) => m?.stepAngles?.Length ?? 1;
-        return s(sourceMapper.leftArmLift)  * s(sourceMapper.leftArmSwing)
-             * s(sourceMapper.leftLegLift)  * s(sourceMapper.leftLegSwing)
-             * s(sourceMapper.rightArmLift) * s(sourceMapper.rightArmSwing)
-             * s(sourceMapper.rightLegLift) * s(sourceMapper.rightLegSwing);
+        switch (part)
+        {
+            case LimbPart.LeftArmLift:   pose.leftArmLift   = value; break;
+            case LimbPart.LeftArmSwing:  pose.leftArmSwing  = value; break;
+            case LimbPart.RightArmLift:  pose.rightArmLift  = value; break;
+            case LimbPart.RightArmSwing: pose.rightArmSwing = value; break;
+            case LimbPart.LeftLegLift:   pose.leftLegLift   = value; break;
+            case LimbPart.LeftLegSwing:  pose.leftLegSwing  = value; break;
+            case LimbPart.RightLegLift:  pose.rightLegLift  = value; break;
+            case LimbPart.RightLegSwing: pose.rightLegSwing = value; break;
+        }
     }
 
 #if UNITY_EDITOR
-    [Header("Editor Tool: บันทึกท่าสุ่มเป็นไฟล์ .asset (ไม่บังคับ)")]
+    [Header("Editor Tool")]
     public int    batchGenerateCount = 10;
     public string saveFolder         = "Assets/DancePoses/Random";
 
-    [ContextMenu("สุ่มหลายท่า + บันทึกเป็นไฟล์ (Editor Only)")]
-    public void BatchGenerateAndSaveAssets()
+    [ContextMenu("สุ่มหลายท่า + บันทึก (Editor Only)")]
+    public void BatchSave()
     {
-        if (!Directory.Exists(saveFolder))
-            Directory.CreateDirectory(saveFolder);
-
+        if (!Directory.Exists(saveFolder)) Directory.CreateDirectory(saveFolder);
         for (int i = 0; i < batchGenerateCount; i++)
         {
-            DancePose p = GenerateRandomPose($"Random_{i + 1:000}");
+            DancePose p = GenerateNewChallenge();
+            p.poseName  = $"Partial_{i + 1:000}_{CurrentLimb}";
             string path = AssetDatabase.GenerateUniqueAssetPath($"{saveFolder}/{p.poseName}.asset");
             AssetDatabase.CreateAsset(p, path);
         }
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log($"[RandomPoseGenerator] Saved {batchGenerateCount} poses to {saveFolder}");
+        Debug.Log($"[RandomPoseGenerator] Saved {batchGenerateCount} partial poses");
     }
 #endif
 }

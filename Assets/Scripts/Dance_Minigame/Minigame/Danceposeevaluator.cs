@@ -3,8 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// เทียบท่าปัจจุบันของตัวละคร (จาก FingerToLimbMapper) กับ DancePose เป้าหมาย
-/// แบบ "ถือนิ่งทีละท่า ไม่มีเวลาจำกัด"
-/// Hold timer แบบ "ใจดี": เพิ่มเร็วตอนแม่น, ลดช้าตอนหลุด
+/// รองรับโหมดชิ้นส่วนเดียว: ถ้า DancePose field ไหนมีค่า -1 จะข้ามไม่เช็ค
+/// คำนวณ accuracy จากเฉพาะชิ้นส่วนที่มีค่า >= 0 เท่านั้น
 /// </summary>
 public class DancePoseEvaluator : MonoBehaviour
 {
@@ -19,12 +19,11 @@ public class DancePoseEvaluator : MonoBehaviour
     [Range(0, 1)] public float holdProgress;
     public bool isPoseComplete;
 
-    [Header("ระบบช่วยเหลือ (Assist)")]
-    [Tooltip("ถ้าค้างนานเกินนี้ (วินาที) โดยยังไม่ผ่าน จะ trigger OnNeedHint")]
+    [Header("ระบบช่วยเหลือ")]
     public float hintAfterSeconds = 10f;
 
-    public event Action<float> OnAccuracyChanged;
-    public event Action<int>   OnPoseComplete;
+    public event Action<float>  OnAccuracyChanged;
+    public event Action<int>    OnPoseComplete;
     public event Action<string> OnNeedHint;
 
     float _holdTimer;
@@ -32,47 +31,55 @@ public class DancePoseEvaluator : MonoBehaviour
     bool  _completed;
     bool  _hintShown;
 
+    // ชื่อชิ้นส่วนที่แย่สุดในรอบนี้ (สำหรับ hint)
+    string _worstLimb = "";
+
     void Update()
     {
         if (currentPose == null || mapper == null) return;
 
-        // คำนวณความแม่นยำของแต่ละจุด — ชื่อ field ตรงกับ FingerToLimbMapper
-        float accLeftArmLift   = Score(mapper.leftArmLift.NormalizedAngle(),   currentPose.leftArmLift,   currentPose.tolerance);
-        float accLeftArmSwing  = Score(mapper.leftArmSwing.NormalizedAngle(),  currentPose.leftArmSwing,  currentPose.tolerance);
-        float accLeftLegLift   = Score(mapper.leftLegLift.NormalizedAngle(),   currentPose.leftLegLift,   currentPose.tolerance);
-        float accLeftLegSwing  = Score(mapper.leftLegSwing.NormalizedAngle(),  currentPose.leftLegSwing,  currentPose.tolerance);
-        float accRightArmLift  = Score(mapper.rightArmLift.NormalizedAngle(),  currentPose.rightArmLift,  currentPose.tolerance);
-        float accRightArmSwing = Score(mapper.rightArmSwing.NormalizedAngle(), currentPose.rightArmSwing, currentPose.tolerance);
-        float accRightLegLift  = Score(mapper.rightLegLift.NormalizedAngle(),  currentPose.rightLegLift,  currentPose.tolerance);
-        float accRightLegSwing = Score(mapper.rightLegSwing.NormalizedAngle(), currentPose.rightLegSwing, currentPose.tolerance);
+        // คำนวณ accuracy เฉพาะชิ้นส่วนที่ค่า >= 0 (ค่า -1 = ข้าม)
+        float total    = 0f;
+        int   count    = 0;
+        float worstAcc = 1f;
 
-        accuracy = (accLeftArmLift + accLeftArmSwing + accLeftLegLift + accLeftLegSwing +
-                    accRightArmLift + accRightArmSwing + accRightLegLift + accRightLegSwing) / 8f;
+        void Check(float actual, float target, string limbName)
+        {
+            if (target < 0f) return;
+            float s = Score(actual, target);
+            total += s;
+            count++;
+            if (s < worstAcc) { worstAcc = s; _worstLimb = limbName; }
+        }
 
+        Check(mapper.leftArmLift.NormalizedAngle(),   currentPose.leftArmLift,   "leftArmLift");
+        Check(mapper.leftArmSwing.NormalizedAngle(),  currentPose.leftArmSwing,  "leftArmSwing");
+        Check(mapper.leftLegLift.NormalizedAngle(),   currentPose.leftLegLift,   "leftLegLift");
+        Check(mapper.leftLegSwing.NormalizedAngle(),  currentPose.leftLegSwing,  "leftLegSwing");
+        Check(mapper.rightArmLift.NormalizedAngle(),  currentPose.rightArmLift,  "rightArmLift");
+        Check(mapper.rightArmSwing.NormalizedAngle(), currentPose.rightArmSwing, "rightArmSwing");
+        Check(mapper.rightLegLift.NormalizedAngle(),  currentPose.rightLegLift,  "rightLegLift");
+        Check(mapper.rightLegSwing.NormalizedAngle(), currentPose.rightLegSwing, "rightLegSwing");
+
+        accuracy = count > 0 ? total / count : 1f;
         OnAccuracyChanged?.Invoke(accuracy);
 
         if (_completed) return;
 
         // Hold timer แบบใจดี
         bool inThreshold = accuracy >= (1f - currentPose.tolerance);
-        if (inThreshold)
-            _holdTimer += Time.deltaTime;
-        else
-            _holdTimer -= Time.deltaTime * 0.5f;
-
+        _holdTimer  += inThreshold ? Time.deltaTime : -Time.deltaTime * 0.5f;
         _holdTimer   = Mathf.Clamp(_holdTimer, 0f, currentPose.holdTime);
         holdProgress = currentPose.holdTime > 0f ? _holdTimer / currentPose.holdTime : 1f;
 
-        // Assist เมื่อติดนาน
+        // Assist hint
         if (!inThreshold)
         {
             _stuckTimer += Time.deltaTime;
             if (_stuckTimer >= hintAfterSeconds && !_hintShown)
             {
                 _hintShown = true;
-                OnNeedHint?.Invoke(FindWorstLimb(
-                    accLeftArmLift, accLeftArmSwing, accLeftLegLift, accLeftLegSwing,
-                    accRightArmLift, accRightArmSwing, accRightLegLift, accRightLegSwing));
+                OnNeedHint?.Invoke(_worstLimb);
             }
         }
         else
@@ -90,7 +97,6 @@ public class DancePoseEvaluator : MonoBehaviour
         }
     }
 
-    /// <summary>เริ่มประเมินท่าใหม่ (เรียกตอนเปลี่ยนเงาเป็นท่าถัดไป)</summary>
     public void SetPose(DancePose newPose)
     {
         currentPose    = newPose;
@@ -99,14 +105,15 @@ public class DancePoseEvaluator : MonoBehaviour
         _completed     = false;
         isPoseComplete = false;
         _hintShown     = false;
+        _worstLimb     = "";
         accuracy       = 0f;
         holdProgress   = 0f;
     }
 
-    float Score(float actual, float target, float tolerance)
+    float Score(float actual, float target)
     {
         float diff = Mathf.Abs(actual - target);
-        return Mathf.Clamp01(1f - diff / tolerance);
+        return Mathf.Clamp01(1f - diff / Mathf.Max(currentPose.tolerance, 0.001f));
     }
 
     int CalcStars(float acc)
@@ -114,18 +121,5 @@ public class DancePoseEvaluator : MonoBehaviour
         if (acc >= 0.95f) return 3;
         if (acc >= 0.85f) return 2;
         return 1;
-    }
-
-    string FindWorstLimb(float a, float b, float c, float d, float e, float f, float g, float h)
-    {
-        string[] names  = { "leftArmLift", "leftArmSwing", "leftLegLift", "leftLegSwing",
-                             "rightArmLift", "rightArmSwing", "rightLegLift", "rightLegSwing" };
-        float[]  values = { a, b, c, d, e, f, g, h };
-
-        int worstIndex = 0;
-        for (int i = 1; i < values.Length; i++)
-            if (values[i] < values[worstIndex]) worstIndex = i;
-
-        return names[worstIndex];
     }
 }

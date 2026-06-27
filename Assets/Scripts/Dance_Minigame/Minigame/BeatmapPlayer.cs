@@ -113,7 +113,7 @@ public class BeatmapPlayer : MonoBehaviour
                 DancePose resolvedPose = cue.dancePose != null
                     ? cue.dancePose
                     : randomPoseGenerator != null
-                        ? randomPoseGenerator.GenerateRandomPose($"Auto_{_nextCueIndex:000}")
+                        ? randomPoseGenerator.GenerateNewChallenge()
                         : null;
 
                 if (resolvedPose == null)
