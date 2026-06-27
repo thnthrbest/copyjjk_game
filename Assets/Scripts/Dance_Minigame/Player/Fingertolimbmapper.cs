@@ -36,14 +36,12 @@ public class FingerToLimbMapper : MonoBehaviour
         public RotationAxis axis = RotationAxis.X;
 
         [Header("ทิศทาง")]
-        [Tooltip("ติ๊ก = นิ้วเหยียด(0) -> มุมมากสุด, นิ้วงอ(1) -> มุมน้อยสุด (กลับทิศจากปกติ)")]
+        [Tooltip("ติ๊ก = กลับทิศการหมุน")]
         public bool invert = false;
 
-        [Header("ช่วงมุมที่หมุนได้จริง (องศา)")]
-        [Tooltip("มุมเมื่อค่านิ้ว = 0 (หรือ 1 ถ้า invert)")]
-        public float minAngle = -45f;
-        [Tooltip("มุมเมื่อค่านิ้ว = 1 (หรือ 0 ถ้า invert)")]
-        public float maxAngle = 90f;
+        [Header("ขั้นองศา — ใส่กี่ค่าก็ได้ ค่านิ้ว 0-1 จะ interpolate ระหว่างขั้น")]
+        [Tooltip("ตัวอย่างแขน 5 ขั้น: -90, -45, 0, 45, 90\nตัวอย่างขา 3 ขั้น: -30, 0, 45")]
+        public float[] stepAngles = { -90f, 0f, 90f };
 
         [Header("ความนุ่มนวล")]
         public float smoothSpeed = 8f;
@@ -52,13 +50,25 @@ public class FingerToLimbMapper : MonoBehaviour
         [HideInInspector] public float currentAngle;
 
         /// <summary>
-        /// คำนวณมุมเป้าหมายจากค่า poseValue (0-1) โดยใช้การตั้งค่าของ map นี้
-        /// ใช้โดย PoseSilhouetteBuilder เพื่อขยับ SilhouetteCharacter ให้ตรงท่าเดียวกัน
+        /// แปลงค่านิ้ว (0-1) เป็นองศาโดย interpolate ระหว่าง stepAngles
+        /// ค่านิ้ว 0.0 = stepAngles[0], ค่านิ้ว 1.0 = stepAngles[สุดท้าย]
+        /// ค่าระหว่างขั้นจะ interpolate ไหลผ่านได้เลย ไม่มีการ snap
         /// </summary>
-        public float GetTargetAngle(float poseValue)
+        public float GetTargetAngle(float fingerValue)
         {
-            float t = invert ? (1f - poseValue) : poseValue;
-            return Mathf.Lerp(minAngle, maxAngle, Mathf.Clamp01(t));
+            if (stepAngles == null || stepAngles.Length == 0) return 0f;
+            if (stepAngles.Length == 1) return stepAngles[0];
+
+            float t = invert ? (1f - fingerValue) : fingerValue;
+            t = Mathf.Clamp01(t);
+
+            // แปลง t (0-1) ให้เป็นตำแหน่งใน stepAngles array
+            float scaled = t * (stepAngles.Length - 1);
+            int   lo     = Mathf.FloorToInt(scaled);
+            int   hi     = Mathf.Min(lo + 1, stepAngles.Length - 1);
+            float frac   = scaled - lo;
+
+            return Mathf.Lerp(stepAngles[lo], stepAngles[hi], frac);
         }
 
         /// <summary>คำนวณและหมุน joint ตามค่านิ้ว (0-1)</summary>
@@ -66,9 +76,7 @@ public class FingerToLimbMapper : MonoBehaviour
         {
             if (joint == null) return;
 
-            float t = invert ? (1f - fingerValue) : fingerValue;
-            float target = Mathf.Lerp(minAngle, maxAngle, Mathf.Clamp01(t));
-
+            float target = GetTargetAngle(fingerValue);
             currentAngle = Mathf.LerpAngle(currentAngle, target, dt * smoothSpeed);
 
             Vector3 e = joint.localEulerAngles;
@@ -82,13 +90,16 @@ public class FingerToLimbMapper : MonoBehaviour
         }
 
         /// <summary>
-        /// แปลง currentAngle กลับเป็นค่า 0-1 (0 = ตรง minAngle, 1 = ตรง maxAngle)
+        /// แปลง currentAngle กลับเป็นค่า 0-1 ตามตำแหน่งใน stepAngles
         /// ใช้สำหรับเทียบกับท่าเป้าหมาย (DancePose)
         /// </summary>
         public float NormalizedAngle()
         {
-            if (Mathf.Approximately(maxAngle, minAngle)) return 0f;
-            return Mathf.InverseLerp(minAngle, maxAngle, currentAngle);
+            if (stepAngles == null || stepAngles.Length <= 1) return 0f;
+            float min = stepAngles[0];
+            float max = stepAngles[stepAngles.Length - 1];
+            if (Mathf.Approximately(min, max)) return 0f;
+            return Mathf.InverseLerp(min, max, currentAngle);
         }
     }
 
