@@ -9,6 +9,7 @@ TagManager:
   - Bullet
   - BulletDestroyer
   - dog
+  - Obstacle
   layers:
   - Default
   - TransparentFX
