@@ -305,7 +305,7 @@ public class HandInputReceiver : MonoBehaviour
                 }
                 
             break;
-            case "bird": 
+            case "dog": 
                 {
                     img.sprite = animalSprite[1];
                     player.GetComponent<dogskill>().StartSkill();
