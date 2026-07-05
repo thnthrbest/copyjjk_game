@@ -216,6 +216,22 @@ public class PlayerController : MonoBehaviour
         PlayerHealth health = GetComponent<PlayerHealth>();
         if (health != null && health.IsDead()) return;
 
+        bool isObstacle = (tag == "Obstacle");
+
+        if (isObstacle)
+        {
+            cowskill cow = GetComponent<cowskill>();
+            if (cow != null && cow.IsActive)
+            {
+                if (hitCollider != null)
+                {
+                    Debug.Log($"[PlayerController] CowSkill active: Destroying obstacle {hitCollider.gameObject.name} upon contact.");
+                    Destroy(hitCollider.gameObject);
+                }
+                return;
+            }
+        }
+
         // If already blinking/slowed, don't trigger damage or slow down again
         if (isBlinking || isSlowed)
         {
@@ -223,8 +239,6 @@ public class PlayerController : MonoBehaviour
                 StartCoroutine(IgnoreCollisionTemp(hitCollider));
             return;
         }
-
-        bool isObstacle = (tag == "Obstacle");
 
         // Damage the player only if it's an Obstacle (bullets/enemies do damage via their own scripts)
         if (isObstacle)

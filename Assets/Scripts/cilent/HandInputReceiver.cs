@@ -311,6 +311,19 @@ public class HandInputReceiver : MonoBehaviour
                     player.GetComponent<dogskill>().StartSkill();
                 }
             break;
+            case "cow":
+                {
+                    if (animalSprite != null && animalSprite.Length > 2)
+                    {
+                        img.sprite = animalSprite[2];
+                    }
+                    var cowSkillComponent = player.GetComponent<cowskill>();
+                    if (cowSkillComponent != null)
+                    {
+                        cowSkillComponent.StartSkill();
+                    }
+                }
+            break;
         }
     }
 
