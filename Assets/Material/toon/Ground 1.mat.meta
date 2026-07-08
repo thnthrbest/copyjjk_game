@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Material/toon/Ground 1.mat.meta
 guid: d42ab5be01bd61449a5793ac876ebd0f
+========
+guid: 8745d43482acd144c9bee6fa3e21a8d5
+>>>>>>>> Seen_new:Assets/Material/toon/Gritline_Outline 1.mat.meta
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 2100000
