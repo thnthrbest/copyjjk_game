@@ -20,12 +20,27 @@ public class RandomPoseGenerator : MonoBehaviour
         RightLegLift, RightLegSwing
     }
 
+    /// <summary>กลุ่ม limb ที่อนุญาตให้สุ่ม (ใช้ติ๊กใน Inspector)</summary>
+    public enum LimbGroup
+    {
+        LeftArm,    // นิ้วชี้ + นิ้วกลาง ฝั่งซ้าย
+        RightArm,   // นิ้วชี้ + นิ้วกลาง ฝั่งขวา
+        LeftLeg,    // นิ้วนาง + นิ้วก้อย ฝั่งซ้าย
+        RightLeg,   // นิ้วนาง + นิ้วก้อย ฝั่งขวา
+    }
+
     [Header("ดึงการตั้งค่าจาก FingerToLimbMapper")]
     public FingerToLimbMapper sourceMapper;
 
     [Header("ค่าเริ่มต้น")]
     public float defaultTolerance = 0.2f;
     public float defaultHoldTime  = 1.0f;
+
+    [Header("กำหนดว่าเพลงนี้สุ่มได้แค่ส่วนไหนบ้าง (ติ๊กอย่างน้อย 1 อัน)")]
+    public bool allowLeftArm  = true;
+    public bool allowRightArm = true;
+    public bool allowLeftLeg  = true;
+    public bool allowRightLeg = true;
 
     [Header("ปลายทาง")]
     public DancePoseEvaluator    evaluator;
@@ -69,9 +84,23 @@ public class RandomPoseGenerator : MonoBehaviour
     [ContextMenu("สุ่มท่าใหม่ทันที")]
     public DancePose GenerateNewChallenge()
     {
-        // 1) สุ่มว่าจะให้ขยับชิ้นส่วนไหน
-        var allParts = System.Enum.GetValues(typeof(LimbPart));
-        CurrentLimb  = (LimbPart)allParts.GetValue(_rng.Next(allParts.Length));
+        // 1) รวบรวม LimbPart ที่อนุญาตให้สุ่มตามที่ติ๊กไว้
+        var allowed = new System.Collections.Generic.List<LimbPart>();
+        if (allowLeftArm)  { allowed.Add(LimbPart.LeftArmLift);  allowed.Add(LimbPart.LeftArmSwing);  }
+        if (allowRightArm) { allowed.Add(LimbPart.RightArmLift); allowed.Add(LimbPart.RightArmSwing); }
+        if (allowLeftLeg)  { allowed.Add(LimbPart.LeftLegLift);  allowed.Add(LimbPart.LeftLegSwing);  }
+        if (allowRightLeg) { allowed.Add(LimbPart.RightLegLift); allowed.Add(LimbPart.RightLegSwing); }
+
+        // ถ้าไม่ได้ติ๊กอะไรเลย ให้สุ่มจากทั้งหมด (fallback)
+        if (allowed.Count == 0)
+        {
+            Debug.LogWarning("[RandomPoseGenerator] ไม่ได้ติ๊ก allow ไว้เลย สุ่มจากทุกส่วนแทน");
+            foreach (LimbPart p in System.Enum.GetValues(typeof(LimbPart)))
+                allowed.Add(p);
+        }
+
+        // 2) สุ่มจาก list ที่อนุญาต
+        CurrentLimb = allowed[_rng.Next(allowed.Count)];
 
         // 2) สุ่มค่าองศา (step) ของชิ้นส่วนนั้น
         float targetValue = RandomStepValue(GetMap(CurrentLimb));
@@ -101,7 +130,7 @@ public class RandomPoseGenerator : MonoBehaviour
         if (silhouetteBuilder != null)
         {
             silhouetteBuilder.ResetHighlight();
-            silhouetteBuilder.ApplyPartialPose(CurrentLimb, targetValue, highlightColor);
+            silhouetteBuilder.ApplyPartialPose(CurrentLimb, targetValue);
         }
 
         Debug.Log($"[RandomPoseGenerator] Limb: {CurrentLimb} | Value: {targetValue:F2}");
@@ -111,6 +140,17 @@ public class RandomPoseGenerator : MonoBehaviour
     // ────────────────────────────────────────────────
     // Helpers
     // ────────────────────────────────────────────────
+
+    /// <summary>
+    /// ให้ MinigameTrigger เรียกก่อนเริ่มเกม เพื่อกำหนดว่าเพลงนี้สุ่มได้แค่ส่วนไหน
+    /// </summary>
+    public void SetAllowedLimbs(bool leftArm, bool rightArm, bool leftLeg, bool rightLeg)
+    {
+        allowLeftArm  = leftArm;
+        allowRightArm = rightArm;
+        allowLeftLeg  = leftLeg;
+        allowRightLeg = rightLeg;
+    }
 
     float RandomStepValue(FingerToLimbMapper.FingerJointMap map)
     {

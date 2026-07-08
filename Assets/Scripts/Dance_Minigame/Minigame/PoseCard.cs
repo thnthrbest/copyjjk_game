@@ -3,22 +3,16 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// PoseCard = รูป Silhouette ท่าเดียวที่เลื่อนจากขวาไปซ้ายในแถบ
-///
-/// Layout แถบ (ซ้าย -> ขวา):
-///   [Red Zone (พลาด)] [Green Zone (ผ่าน)]
-///   missLine           judgeLine ... spawnX
-///
-/// เข้าโซนเขียว (x <= judgeLine) -> เริ่มเช็ค accuracy ทันที
-///   - ผ่านเกณฑ์เมื่อไหร่ -> Success ทันที
-///   - ถ้าเลย missLine (เข้าโซนแดง) ยังไม่ผ่าน -> Miss
+/// การ์ดท่าเต้นที่เลื่อนจากขวาไปซ้ายในแถบจังหวะ
+/// ตอน Spawn จะขอถ่ายภาพ Silhouette ของท่านั้นจาก SilhouetteSnapshot
+/// แต่ละใบมี Sprite ของตัวเอง ทำให้มีหลายใบพร้อมกันในแถบได้
 /// </summary>
 [RequireComponent(typeof(CanvasGroup))]
 public class PoseCard : MonoBehaviour
 {
-    [Header("UI Components")]
-    [Tooltip("ไม่ต้องลาก — ระบบจะหา PoseSilhouetteBuilder จาก Scene อัตโนมัติตอน Spawn")]
-    public Image cardBackground;
+    [Header("UI")]
+    public Image  silhouetteImage;   // Raw Image แสดงภาพ Silhouette
+    public Image  cardBackground;
 
     [Header("สี")]
     public Color colorDefault = new Color(0.1f, 0.1f, 0.1f, 1f);
@@ -27,39 +21,60 @@ public class PoseCard : MonoBehaviour
     public Color colorMiss    = new Color(0.85f, 0.2f, 0.2f, 1f);
 
     [HideInInspector] public DancePose dancePose;
-    [HideInInspector] public float scrollSpeed;
+    [HideInInspector] public float     scrollSpeed;
 
-    RhythmLaneUI         _laneUI;
-    CanvasGroup          _canvasGroup;
-    PoseSilhouetteBuilder _silhouetteBuilder;  // หาจาก Scene ตอน Init ไม่ใช่ลากจาก Inspector
+    RhythmLaneUI _laneUI;
+    CanvasGroup  _canvasGroup;
+    bool         _judgeStarted;
 
     public enum CardState { Incoming, Judging, Success, Miss }
     public CardState State { get; private set; } = CardState.Incoming;
 
-    bool _judgeStarted;
+    void Awake() => _canvasGroup = GetComponent<CanvasGroup>();
 
-    void Awake()
+    void OnDestroy()
     {
-        _canvasGroup = GetComponent<CanvasGroup>();
+        // ล้าง Texture2D/Sprite ที่ SilhouetteSnapshot สร้างไว้ให้การ์ดใบนี้โดยเฉพาะ
+        // ป้องกัน memory leak เพราะ Texture2D/Sprite เป็น Unity Object ที่ GC ไม่เก็บให้เอง
+        if (silhouetteImage != null && silhouetteImage.sprite != null)
+        {
+            Texture2D tex = silhouetteImage.sprite.texture;
+            Destroy(silhouetteImage.sprite);
+            if (tex != null) Destroy(tex);
+        }
     }
 
-    public void Init(DancePose pose, float speed, RhythmLaneUI lane)
+    /// <summary>
+    /// เรียกตอน Spawn
+    /// limb + targetValue ใช้สั่ง SilhouetteSnapshot ถ่ายภาพท่านั้นโดยเฉพาะ
+    /// </summary>
+    public void Init(
+        DancePose pose,
+        float speed,
+        RhythmLaneUI lane,
+        SilhouetteSnapshot snapshot,
+        RandomPoseGenerator.LimbPart limb,
+        float targetValue)
     {
         dancePose   = pose;
         scrollSpeed = speed;
         _laneUI     = lane;
 
-        // หา PoseSilhouetteBuilder จาก Scene อัตโนมัติ
-        // (ติดอยู่บน SilhouetteCharacter ซึ่งเป็น GameObject ใน Scene ไม่ใช่ใน Prefab)
-        if (_silhouetteBuilder == null)
-            _silhouetteBuilder = FindObjectOfType<PoseSilhouetteBuilder>();
-
-        if (_silhouetteBuilder != null && pose != null)
-            _silhouetteBuilder.ApplyPose(pose);
-        else if (_silhouetteBuilder == null)
-            Debug.LogWarning("[PoseCard] หา PoseSilhouetteBuilder ใน Scene ไม่เจอ ตรวจสอบว่า SilhouetteCharacter มี component นี้ติดอยู่");
-
         SetColor(colorDefault);
+
+        // ถ่ายภาพท่านี้แล้วใส่เป็น Sprite ของการ์ดใบนี้
+        if (snapshot != null)
+        {
+            snapshot.CaptureForCard(limb, targetValue, sprite =>
+            {
+                if (silhouetteImage != null)
+                    silhouetteImage.sprite = sprite;
+            });
+        }
+        else
+        {
+            Debug.LogWarning("[PoseCard] ไม่มี SilhouetteSnapshot");
+        }
     }
 
     void Update()
@@ -69,7 +84,6 @@ public class PoseCard : MonoBehaviour
         transform.localPosition += Vector3.left * scrollSpeed * Time.deltaTime;
         float x = transform.localPosition.x;
 
-        // เข้าโซนแดง (เลย judgeLine ไปแล้วและยังไม่ผ่าน) = Miss
         if (x <= _laneUI.MissLine)
         {
             State = CardState.Miss;
@@ -77,17 +91,15 @@ public class PoseCard : MonoBehaviour
             return;
         }
 
-        // เข้าโซนเขียว (judgeLine) = เริ่มเช็ค accuracy
-        if (!_judgeStarted && x <= _laneUI.JudgeLine)
+        if (!_judgeStarted && x <= _laneUI.JudgeZoneRight)
         {
             _judgeStarted = true;
-            State = CardState.Judging;
+            State         = CardState.Judging;
             SetColor(colorJudge);
             _laneUI.OnCardEnterJudgeZone(this);
         }
     }
 
-    /// <summary>เรียกจาก RhythmLaneUI เมื่อ accuracy ผ่านเกณฑ์ (ไม่มีระดับ แค่ผ่าน/ไม่ผ่าน)</summary>
     public void MarkSuccess()
     {
         State = CardState.Success;
@@ -104,16 +116,13 @@ public class PoseCard : MonoBehaviour
 
     IEnumerator FadeAndDestroy(float duration)
     {
-        float elapsed = 0f;
-        float startAlpha = _canvasGroup.alpha;
-
+        float elapsed = 0f, start = _canvasGroup.alpha;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            _canvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, elapsed / duration);
+            _canvasGroup.alpha = Mathf.Lerp(start, 0f, elapsed / duration);
             yield return null;
         }
-
         Destroy(gameObject);
     }
 

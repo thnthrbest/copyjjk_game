@@ -36,7 +36,7 @@ public class PoseSilhouetteBuilder : MonoBehaviour
     /// ไฮไลต์ชิ้นส่วนที่สุ่มมาด้วยสีพิเศษ และขยับ joint ให้ตรงค่าเป้าหมาย
     /// ชิ้นส่วนอื่นคง joint เดิมไว้ ไม่ขยับ ไม่เปลี่ยนสี
     /// </summary>
-    public void ApplyPartialPose(RandomPoseGenerator.LimbPart part, float targetValue, Color highlightColor)
+    public void ApplyPartialPose(RandomPoseGenerator.LimbPart part, float targetValue)
     {
         var map = GetMap(part);
         if (map == null) { Debug.LogWarning($"[Silhouette] GetMap null for {part}"); return; }
@@ -55,6 +55,29 @@ public class PoseSilhouetteBuilder : MonoBehaviour
         SetMaterial(rightArmRenderer, defaultMaterial);
         SetMaterial(leftLegRenderer,  defaultMaterial);
         SetMaterial(rightLegRenderer, defaultMaterial);
+    }
+
+    /// <summary>
+    /// หมุนทุก joint กลับไปยังท่ากลาง (ค่ากึ่งกลางของ stepAngles แต่ละชิ้น)
+    /// เรียกก่อนสุ่มท่าใหม่ทุกครั้ง ป้องกันท่าเก่าค้างผสมกับท่าใหม่
+    /// </summary>
+    public void ResetPose()
+    {
+        ResetJoint(leftArmJoint,  sourceMapper?.leftArmLift);
+        ResetJoint(leftArmJoint,  sourceMapper?.leftArmSwing);
+        ResetJoint(rightArmJoint, sourceMapper?.rightArmLift);
+        ResetJoint(rightArmJoint, sourceMapper?.rightArmSwing);
+        ResetJoint(leftLegJoint,  sourceMapper?.leftLegLift);
+        ResetJoint(leftLegJoint,  sourceMapper?.leftLegSwing);
+        ResetJoint(rightLegJoint, sourceMapper?.rightLegLift);
+        ResetJoint(rightLegJoint, sourceMapper?.rightLegSwing);
+    }
+
+    void ResetJoint(Transform joint, FingerToLimbMapper.FingerJointMap map)
+    {
+        if (joint == null || map == null) return;
+        float angle = map.GetTargetAngle(0.5f); // ค่ากึ่งกลาง = ท่ากลาง
+        SetJointAngle(joint, angle, map.axis);
     }
 
     // ────────────────────────────────────────────────

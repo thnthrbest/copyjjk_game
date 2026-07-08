@@ -5,39 +5,44 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// จัดการแถบ Rhythm UI — ระบบ 2 โซนแบบง่าย (ผ่าน/ไม่ผ่าน ไม่มีระดับดาว)
+/// จัดการแถบ Rhythm UI — ระบบ 3 โซน
 ///
 /// Layout (Local X จากซ้ายไปขวา):
-///   [Red Zone (พลาด)] [Green Zone (โซนตัดสิน/ผ่าน)]
-///   missLine           judgeLine ......... spawnX
+///   [Red Zone (พลาด)] [Green Zone (ตัดสิน)] [Black Zone (รอ)]
+///   missLine           judgeLeft  judgeRight             spawnX
 ///
 /// - PoseCard เลื่อนจาก spawnX ไปทางซ้าย
-/// - เมื่อถึง judgeLine -> เข้าโซนเขียว เริ่มเช็ค accuracy ทุก frame
-/// - ผ่านเกณฑ์ (>= passThreshold) เมื่อไหร่ -> Success ทันที (ไม่ต้องรอถึงไหน)
-/// - ถ้าเลย missLine (เข้าโซนแดง) ก่อนผ่าน -> Miss
-///
-/// คะแนนรวมแสดงเป็น % จำนวนท่าที่สำเร็จจากทั้งหมด ไม่ใช้ระบบ Score สะสม
-/// เกณฑ์ผ่านด่าน (ปรับได้): stagePassPercent (ค่าเริ่มต้น 80%)
+/// - เมื่อถึง judgeRight → เข้าโซนเขียว เริ่มเช็ค accuracy
+/// - ผ่านเกณฑ์ก่อนเลย judgeLeft → Success
+/// - เลย missLine ยังไม่ผ่าน → Miss
 /// </summary>
 public class RhythmLaneUI : MonoBehaviour
 {
     [Header("Zone Boundaries (Local X)")]
-    [Tooltip("เส้นซ้ายสุด: ถ้า PoseCard ข้ามนี้ไปโดยยังไม่ผ่าน = Miss")]
-    public float missLine  = -650f;
-    [Tooltip("เส้นตัดสิน: PoseCard เข้าเส้นนี้ = เริ่มเช็ค accuracy")]
-    public float judgeLine = -450f;
+    [Tooltip("เส้นซ้ายสุด: PoseCard ข้ามนี้ = Miss")]
+    public float missLine   = -650f;
+    [Tooltip("ขอบซ้ายของโซนเขียว")]
+    public float judgeLeft  = -500f;
+    [Tooltip("ขอบขวาของโซนเขียว: PoseCard เข้าเส้นนี้ = เริ่มเช็ค")]
+    public float judgeRight = -350f;
     [Tooltip("จุด spawn PoseCard (ขวาสุดของแถบดำ)")]
-    public float spawnX    =  800f;
+    public float spawnX     =  800f;
 
     [Header("อ้างอิง")]
     public DancePoseEvaluator evaluator;
     public Transform cardContainer;
     public GameObject poseCardPrefab;
+    [Tooltip("ตัวถ่ายภาพ Silhouette ทีละใบ")]
+    public SilhouetteSnapshot silhouetteSnapshot;
 
     [Header("Progress UI")]
-    [Tooltip("แสดงผลแบบ '8/10 (80%)'")]
-    public TextMeshProUGUI percentText;
-    public TextMeshProUGUI feedbackText;   // ขึ้นข้อความสั้นๆ ตอนตัดสินแต่ละท่า (PASS / MISS)
+    [Tooltip("Image ที่จะเปลี่ยน Sprite ตามระดับเปอร์เซ็นต์ที่ทำได้")]
+    public Image progressImage;
+    [Tooltip("0-25%")] public Sprite progressSprite0;
+    [Tooltip("25-50%")] public Sprite progressSprite25;
+    [Tooltip("50-75%")] public Sprite progressSprite50;
+    [Tooltip("75-100%")] public Sprite progressSprite75;
+    public TextMeshProUGUI feedbackText;
 
     [Header("เกณฑ์")]
     [Tooltip("accuracy ขั้นต่ำที่นับว่าผ่านท่านี้ (0-1)")]
@@ -49,14 +54,15 @@ public class RhythmLaneUI : MonoBehaviour
     // เผื่อ BeatmapPlayer ต้องรู้ว่าทั้งหมดกี่ท่า (ตั้งตอนเริ่มเพลง)
     [HideInInspector] public int totalCues;
 
-    public float JudgeLine => judgeLine;
-    public float MissLine  => missLine;
+    public float JudgeZoneLeft  => judgeLeft;
+    public float JudgeZoneRight => judgeRight;
+    public float MissLine       => missLine;
 
     readonly List<PoseCard> _activeCards = new();
     PoseCard _currentJudgeCard;
 
     int _successCount;
-    int _judgedCount;     // ท่าที่ตัดสินแล้ว (ไม่ว่าผ่านหรือพลาด)
+    int _judgedCount;
 
     public float CurrentPercent => totalCues > 0 ? (_successCount / (float)totalCues) * 100f : 0f;
     public bool  IsStagePassed  => CurrentPercent >= stagePassPercent && _judgedCount >= totalCues;
@@ -72,10 +78,15 @@ public class RhythmLaneUI : MonoBehaviour
         UpdatePercentUI();
     }
 
-    public float GetSpawnToJudgeDistance() => spawnX - judgeLine;
+    public float GetSpawnToJudgeDistance() => spawnX - judgeRight;
 
-    /// <summary>BeatmapPlayer เรียกเพื่อ spawn PoseCard ใหม่ พร้อมท่าที่ resolve แล้ว (กำหนดไว้ล่วงหน้าหรือสุ่มมา)</summary>
-    public void SpawnPoseCard(BeatmapCue cue, DancePose resolvedPose, float scrollSpeed)
+    /// <summary>BeatmapPlayer เรียกเพื่อ spawn PoseCard ใหม่</summary>
+    public void SpawnPoseCard(
+        BeatmapCue cue,
+        DancePose resolvedPose,
+        float scrollSpeed,
+        RandomPoseGenerator.LimbPart limb,
+        float targetValue)
     {
         if (poseCardPrefab == null || cardContainer == null)
         {
@@ -87,7 +98,7 @@ public class RhythmLaneUI : MonoBehaviour
         go.transform.localPosition = new Vector3(spawnX, 0f, 0f);
 
         PoseCard card = go.GetComponent<PoseCard>();
-        card.Init(resolvedPose, scrollSpeed, this);
+        card.Init(resolvedPose, scrollSpeed, this, silhouetteSnapshot, limb, targetValue);
         _activeCards.Add(card);
     }
 
@@ -163,8 +174,18 @@ public class RhythmLaneUI : MonoBehaviour
 
     void UpdatePercentUI()
     {
-        if (percentText == null) return;
-        percentText.text = $"{_successCount}/{totalCues} ({CurrentPercent:F0}%)";
+        if (progressImage == null) return;
+
+        float p = CurrentPercent;
+
+        Sprite target;
+        if (p < 25f)       target = progressSprite0;
+        else if (p < 50f)  target = progressSprite25;
+        else if (p < 75f)  target = progressSprite50;
+        else               target = progressSprite75;
+
+        if (target != null)
+            progressImage.sprite = target;
     }
 
 #if UNITY_EDITOR
@@ -174,13 +195,14 @@ public class RhythmLaneUI : MonoBehaviour
         float h = 50f;
 
         Gizmos.color = Color.red;
-        Gizmos.DrawLine(o + new Vector3(missLine,  -h, 0), o + new Vector3(missLine,  h, 0));
+        Gizmos.DrawLine(o + new Vector3(missLine,   -h, 0), o + new Vector3(missLine,    h, 0));
 
         Gizmos.color = Color.green;
-        Gizmos.DrawLine(o + new Vector3(judgeLine, -h, 0), o + new Vector3(judgeLine, h, 0));
+        Gizmos.DrawLine(o + new Vector3(judgeLeft,  -h, 0), o + new Vector3(judgeLeft,   h, 0));
+        Gizmos.DrawLine(o + new Vector3(judgeRight, -h, 0), o + new Vector3(judgeRight,  h, 0));
 
         Gizmos.color = Color.white;
-        Gizmos.DrawLine(o + new Vector3(spawnX,    -h, 0), o + new Vector3(spawnX,    h, 0));
+        Gizmos.DrawLine(o + new Vector3(spawnX,     -h, 0), o + new Vector3(spawnX,      h, 0));
     }
 #endif
 }

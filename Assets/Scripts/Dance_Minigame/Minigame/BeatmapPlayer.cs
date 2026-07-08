@@ -1,41 +1,29 @@
-using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// อ่าน BeatmapSO และ spawn PoseCard ตามเวลาที่กำหนด
-/// sync กับ AudioSource โดยใช้ audioSource.time เป็น ground truth
-/// ทำให้ตรงจังหวะแม้เกิด frame drop
-/// </summary>
 [RequireComponent(typeof(AudioSource))]
 public class BeatmapPlayer : MonoBehaviour
 {
     [Header("อ้างอิง")]
-    public BeatmapSO beatmap;
-    public RhythmLaneUI laneUI;       // แถบ UI ที่จะ spawn PoseCard เข้าไป
-
-    [Header("ตัวสุ่มท่า (ใช้เมื่อ cue ไม่ได้กำหนด DancePose ไว้ล่วงหน้า)")]
-    [Tooltip("ถ้า cue.dancePose เป็นค่าว่าง ระบบจะสุ่มท่าจากตัวนี้ให้อัตโนมัติตอน spawn")]
+    public BeatmapSO        beatmap;
+    public RhythmLaneUI     laneUI;
     public RandomPoseGenerator randomPoseGenerator;
 
     [Header("สถานะ (อ่านอย่างเดียว)")]
-    public bool isPlaying;
+    public bool  isPlaying;
     public float currentBeat;
 
-    /// <summary>ยิงตอนเพลงเล่นจบ ส่งค่า true/false ว่าผู้เล่นผ่านด่านหรือไม่</summary>
     public event System.Action<bool> OnSongFinished;
 
     AudioSource _audio;
-    int _nextCueIndex;
+    int   _nextCueIndex;
     float _spawnAheadTime;
-    bool _started;
-    bool _waitingForCard;   // รอให้การ์ดปัจจุบันหายก่อนค่อย spawn ใบถัดไป
+    bool  _started;
+    float _gameTimer;   // นับตั้งแต่ Play() ถูกเรียก
 
     void Awake() => _audio = GetComponent<AudioSource>();
 
     void Start()
     {
-        // เริ่มเล่นอัตโนมัติตอนเริ่มเกม (ถ้ามี beatmap ใส่ไว้)
-        // ถอดออกได้ภายหลังถ้าอยากให้เรียกจาก MinigameTrigger แทน
         if (beatmap != null)
             Play(beatmap);
         else
@@ -50,25 +38,25 @@ public class BeatmapPlayer : MonoBehaviour
             return;
         }
 
-        beatmap           = map;
-        _nextCueIndex     = 0;
-        _started          = false;
-        _waitingForCard   = false;
-        isPlaying         = true;
+        beatmap       = map;
+        _nextCueIndex = 0;
+        _started      = false;
+        isPlaying     = true;
+        _gameTimer    = 0f;
 
         laneUI.ResetProgress(beatmap.cues.Length);
 
-        // ดักฟัง event จาก RhythmLaneUI ว่าการ์ดปัจจุบันหายไปแล้ว
-        laneUI.OnCardFinished -= OnCardFinished;
-        laneUI.OnCardFinished += OnCardFinished;
-
+        // คำนวณว่าการ์ดต้องใช้เวลากี่วินาทีเลื่อนจาก spawnX มาถึง judgeRight
+        // นี่คือ leadInTime จริงๆ ที่ทำให้การ์ดถึงเส้นพอดีกับเพลงเริ่ม
         _spawnAheadTime = laneUI.GetSpawnToJudgeDistance() / beatmap.scrollSpeed;
 
         _audio.clip = beatmap.audioClip;
         _audio.time = 0f;
+
+        // ใช้ leadInTime จาก BeatmapSO ที่ปรับให้ตรงจังหวะแล้ว
         Invoke(nameof(StartAudio), beatmap.leadInTime);
 
-        Debug.Log($"[BeatmapPlayer] เริ่ม: {beatmap.songName} | BPM: {beatmap.bpm}");
+        Debug.Log($"[BeatmapPlayer] เริ่ม: {beatmap.songName} | BPM: {beatmap.bpm} | spawnAhead: {_spawnAheadTime:F2}s");
     }
 
     void StartAudio()
@@ -82,62 +70,82 @@ public class BeatmapPlayer : MonoBehaviour
         isPlaying = false;
         _audio.Stop();
         CancelInvoke(nameof(StartAudio));
-        if (laneUI != null) laneUI.OnCardFinished -= OnCardFinished;
-    }
-
-    void OnCardFinished()
-    {
-        // การ์ดใบปัจจุบันหายไปแล้ว พร้อม spawn ใบถัดไป
-        _waitingForCard = false;
     }
 
     void Update()
     {
         if (!isPlaying || beatmap == null) return;
 
-        float gameTime = _started
-            ? _audio.time + beatmap.leadInTime
-            : Mathf.Max(0f, Time.timeSinceLevelLoad);
+        _gameTimer += Time.deltaTime;
 
-        currentBeat = (gameTime / 60f) * beatmap.bpm;
+        // beat ปัจจุบัน (นับจากเพลงเริ่มจริง)
+        if (_started)
+            currentBeat = (_audio.time / 60f) * beatmap.bpm;
 
-        // Spawn การ์ดทีละใบ รอให้ใบก่อนหายก่อนค่อย spawn ใบถัดไป
-        if (!_waitingForCard && _nextCueIndex < beatmap.cues.Length)
+        while (_nextCueIndex < beatmap.cues.Length)
         {
             BeatmapCue cue     = beatmap.cues[_nextCueIndex];
             float      cueTime = beatmap.BeatToSeconds(cue.beat);
-            float      spawnAt = cueTime - _spawnAheadTime;
 
-            if (gameTime >= spawnAt + beatmap.leadInTime)
+            // เวลาที่ต้อง spawn นับจาก Play()
+            // cueTime คือเวลาที่การ์ดควรถึงเส้น judgeRight (ซึ่งตรงกับเวลาใน audio)
+            // แต่เพลงเริ่มหลัง _spawnAheadTime วินาที ดังนั้น:
+            // spawnAt = _spawnAheadTime + cueTime - _spawnAheadTime = cueTime
+            // สรุปคือ spawn การ์ดตรงกับ cueTime ที่นับจาก Play() พอดี
+            float spawnAt = cueTime;
+
+            if (_gameTimer >= spawnAt)
             {
-                DancePose resolvedPose = cue.dancePose != null
-                    ? cue.dancePose
-                    : randomPoseGenerator != null
-                        ? randomPoseGenerator.GenerateNewChallenge()
-                        : null;
+                DancePose resolvedPose;
+                RandomPoseGenerator.LimbPart limb = default;
+                float targetValue = 0f;
 
-                if (resolvedPose == null)
+                if (cue.dancePose != null)
                 {
-                    Debug.LogWarning($"[BeatmapPlayer] cue {_nextCueIndex} ไม่มี DancePose ข้าม");
+                    resolvedPose = cue.dancePose;
+                }
+                else if (randomPoseGenerator != null)
+                {
+                    resolvedPose = randomPoseGenerator.GenerateNewChallenge();
+                    limb         = randomPoseGenerator.CurrentLimb;
+                    targetValue  = GetLimbValue(resolvedPose, limb);
                 }
                 else
                 {
-                    laneUI.SpawnPoseCard(cue, resolvedPose, beatmap.scrollSpeed);
-                    _waitingForCard = true;   // รอการ์ดใบนี้หายก่อน
+                    Debug.LogWarning($"[BeatmapPlayer] cue {_nextCueIndex} ไม่มี DancePose ข้าม");
+                    _nextCueIndex++;
+                    continue;
                 }
 
+                laneUI.SpawnPoseCard(cue, resolvedPose, beatmap.scrollSpeed, limb, targetValue);
                 _nextCueIndex++;
             }
+            else break;
         }
 
         // จบเพลง
-        if (_started && !_audio.isPlaying && _nextCueIndex >= beatmap.cues.Length && !_waitingForCard)
+        if (_started && !_audio.isPlaying && _nextCueIndex >= beatmap.cues.Length)
         {
             isPlaying = false;
-            laneUI.OnCardFinished -= OnCardFinished;
             bool passed = laneUI != null && laneUI.IsStagePassed;
             Debug.Log($"[BeatmapPlayer] จบเพลง | ผ่านด่าน: {passed}");
             OnSongFinished?.Invoke(passed);
         }
+    }
+
+    float GetLimbValue(DancePose pose, RandomPoseGenerator.LimbPart limb)
+    {
+        return limb switch
+        {
+            RandomPoseGenerator.LimbPart.LeftArmLift   => pose.leftArmLift,
+            RandomPoseGenerator.LimbPart.LeftArmSwing  => pose.leftArmSwing,
+            RandomPoseGenerator.LimbPart.RightArmLift  => pose.rightArmLift,
+            RandomPoseGenerator.LimbPart.RightArmSwing => pose.rightArmSwing,
+            RandomPoseGenerator.LimbPart.LeftLegLift   => pose.leftLegLift,
+            RandomPoseGenerator.LimbPart.LeftLegSwing  => pose.leftLegSwing,
+            RandomPoseGenerator.LimbPart.RightLegLift  => pose.rightLegLift,
+            RandomPoseGenerator.LimbPart.RightLegSwing => pose.rightLegSwing,
+            _                                          => 0f
+        };
     }
 }

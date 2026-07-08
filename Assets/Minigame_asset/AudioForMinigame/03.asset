@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   songName: 
   audioClip: {fileID: 8300000, guid: 611549c41d7ff3d42a4a57e33e44409d, type: 3}
-  bpm: 100
+  bpm: 120
   scrollSpeed: 800
   leadInTime: 1
   cues:
@@ -29,6 +29,64 @@ MonoBehaviour:
   - beat: 18
     dancePose: {fileID: 0}
   - beat: 22
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
+    dancePose: {fileID: 0}
+  - beat: 26
     dancePose: {fileID: 0}
   - beat: 26
     dancePose: {fileID: 0}

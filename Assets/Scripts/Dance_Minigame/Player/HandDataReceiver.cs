@@ -25,6 +25,8 @@ public class HandPacket
 {
     public FingerData left;
     public FingerData right;
+    public string calib_phase;      // "ready" | "open" | "close" | "done" | null
+    public int    calib_countdown;  // frames ที่เหลือในขั้นนั้น (60 fps)
 }
 
 /// <summary>
@@ -40,17 +42,20 @@ public class HandDataReceiver : MonoBehaviour
     [Header("Debug")]
     public bool logRawJson = false;
 
-    /// <summary>ค่านิ้วของมือซ้ายล่าสุด (คงค่าเดิมไว้ถ้ามือหายไปจากกล้อง)</summary>
-    public static FingerData LeftHand { get; private set; } = new FingerData();
-
-    /// <summary>ค่านิ้วของมือขวาล่าสุด</summary>
+    public static FingerData LeftHand  { get; private set; } = new FingerData();
     public static FingerData RightHand { get; private set; } = new FingerData();
-
-    /// <summary>true ถ้าพบมือซ้ายในเฟรมล่าสุด</summary>
-    public static bool LeftHandDetected { get; private set; }
-
-    /// <summary>true ถ้าพบมือขวาในเฟรมล่าสุด</summary>
+    public static bool LeftHandDetected  { get; private set; }
     public static bool RightHandDetected { get; private set; }
+
+    /// <summary>phase calibration ปัจจุบัน: "ready","open","close","done"</summary>
+    public static string CalibPhase     { get; private set; } = "ready";
+    /// <summary>frames ที่เหลือในขั้นนั้น (หารด้วย 30 ได้วินาที)</summary>
+    public static int    CalibCountdown { get; private set; } = 0;
+    /// <summary>true ถ้า Python calibrate เสร็จแล้ว</summary>
+    public static bool   IsCalibrated  => CalibPhase == "done";
+
+    /// <summary>true ถ้าเคยได้รับ packet จาก Python แล้วอย่างน้อย 1 ครั้ง</summary>
+    public static bool HasReceivedData { get; private set; } = false;
 
     UdpClient _client;
     Thread _thread;
@@ -129,9 +134,13 @@ public class HandDataReceiver : MonoBehaviour
             LeftHandDetected  = packet.left  != null && packet.left.index  >= 0f;
             RightHandDetected = packet.right != null && packet.right.index >= 0f;
 
-            // คงค่าล่าสุดไว้ถ้ามือหายไปชั่วคราว (กันท่ากระตุกกลับ rest position)
             if (LeftHandDetected)  LeftHand  = packet.left;
             if (RightHandDetected) RightHand = packet.right;
+
+            // อัปเดต calibration status
+            HasReceivedData = true;
+            CalibPhase      = string.IsNullOrEmpty(packet.calib_phase) ? "done" : packet.calib_phase;
+            CalibCountdown  = packet.calib_countdown;
         }
         catch (Exception e)
         {

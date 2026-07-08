@@ -14,23 +14,57 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   songName: 
   audioClip: {fileID: 8300000, guid: f56d36b374a55384c8b6f5feaab4f4e7, type: 3}
-  bpm: 100
-  scrollSpeed: 800
-  leadInTime: 1
+  bpm: 120
+  scrollSpeed: 600
+  leadInTime: 1.45
   cues:
+  - beat: 0
+    dancePose: {fileID: 0}
   - beat: 2
+    dancePose: {fileID: 0}
+  - beat: 5
     dancePose: {fileID: 0}
   - beat: 6
     dancePose: {fileID: 0}
-  - beat: 10
+  - beat: 8
     dancePose: {fileID: 0}
-  - beat: 14
+  - beat: 11.5
     dancePose: {fileID: 0}
-  - beat: 18
+  - beat: 15.5
+    dancePose: {fileID: 0}
+  - beat: 18.5
+    dancePose: {fileID: 0}
+  - beat: 20
     dancePose: {fileID: 0}
   - beat: 22
     dancePose: {fileID: 0}
-  - beat: 26
+  - beat: 23.5
+    dancePose: {fileID: 0}
+  - beat: 25
+    dancePose: {fileID: 0}
+  - beat: 26.5
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
+    dancePose: {fileID: 0}
+  - beat: 30
     dancePose: {fileID: 0}
   startBeat: 2
   beatInterval: 4
