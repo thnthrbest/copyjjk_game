@@ -27,8 +27,11 @@ public class DancePose : ScriptableObject
     [Range(0, 1)] public float rightLegSwing;
 
     [Header("เกณฑ์การให้คะแนน")]
-    [Tooltip("ความคลาดเคลื่อนที่ยอมรับได้ต่อจุด (0-1) ยิ่งน้อยยิ่งยาก")]
+    [Tooltip("ความคลาดเคลื่อนปกติต่อจุด (0-1)")]
     [Range(0.01f, 0.5f)] public float tolerance = 0.15f;
+
+    [Tooltip("ความคลาดเคลื่อนพิเศษของ step เป้าหมาย (กว้างกว่า tolerance ปกติ เพื่อให้ผู้เล่นทำได้ง่ายขึ้น)")]
+    [Range(0.01f, 0.8f)] public float targetStepTolerance = 0.35f;
 
     [Tooltip("ต้องค้างท่าให้ตรง (accuracy เกิน threshold) กี่วินาทีจึงผ่าน")]
     public float holdTime = 1.0f;

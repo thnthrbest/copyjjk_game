@@ -1,22 +1,13 @@
 using UnityEngine;
 
 /// <summary>
-/// แปลงค่านิ้ว (0-1) จาก HandDataReceiver เป็นการหมุน (localEulerAngles)
-/// ของข้อต่อแขน/ขาแต่ละจุด ตาม mapping:
+/// แปลงค่านิ้ว (0-1) จาก HandDataReceiver เป็นการหมุน localEulerAngles
+/// ของข้อต่อแขน/ขาแต่ละจุด โดยใช้ stepAngles array ที่ปรับได้ใน Inspector
 ///
-///   มือซ้าย
-///     index  -> leftArmLift   (ยกแขนซ้าย ขึ้น/ลง)
-///     middle -> leftArmSwing  (หมุนแขนซ้าย หน้า/หลัง)
-///     ring   -> leftLegLift   (ยกขาซ้าย ด้านข้าง)
-///     pinky  -> leftLegSwing  (ขาซ้าย หน้า/หลัง)
-///
-///   มือขวา (สมมาตรกัน)
-///     index  -> rightArmLift
-///     middle -> rightArmSwing
-///     ring   -> rightLegLift
-///     pinky  -> rightLegSwing
-///
-///   (นิ้วโป้งทั้งสองข้างไม่ได้ใช้ในตอนนี้)
+/// Mapping:
+///   มือซ้าย: index=ยกแขน, middle=หมุนแขนหน้า/หลัง, ring=ยกขาด้านข้าง, pinky=ขาหน้า/หลัง
+///   มือขวา: เหมือนกันสมมาตร
+///   (นิ้วโป้งทั้งสองข้างไม่ใช้)
 /// </summary>
 public class FingerToLimbMapper : MonoBehaviour
 {
@@ -26,7 +17,7 @@ public class FingerToLimbMapper : MonoBehaviour
     public class FingerJointMap
     {
         [Header("ข้อมูล")]
-        [Tooltip("ใส่ชื่อไว้ดูง่ายๆ เช่น 'แขนซ้าย-ยกขึ้น'")]
+        [Tooltip("ชื่อไว้ดูง่ายๆ เช่น 'แขนซ้าย-ยกขึ้น'")]
         public string label;
 
         [Tooltip("GameObject ข้อต่อที่จะหมุน")]
@@ -59,10 +50,8 @@ public class FingerToLimbMapper : MonoBehaviour
             if (stepAngles == null || stepAngles.Length == 0) return 0f;
             if (stepAngles.Length == 1) return stepAngles[0];
 
-            float t = invert ? (1f - fingerValue) : fingerValue;
-            t = Mathf.Clamp01(t);
-
-            // แปลง t (0-1) ให้เป็นตำแหน่งใน stepAngles array
+            float t      = invert ? (1f - fingerValue) : fingerValue;
+            t            = Mathf.Clamp01(t);
             float scaled = t * (stepAngles.Length - 1);
             int   lo     = Mathf.FloorToInt(scaled);
             int   hi     = Mathf.Min(lo + 1, stepAngles.Length - 1);
@@ -90,8 +79,8 @@ public class FingerToLimbMapper : MonoBehaviour
         }
 
         /// <summary>
-        /// แปลง currentAngle กลับเป็นค่า 0-1 ตามตำแหน่งใน stepAngles
-        /// ใช้สำหรับเทียบกับท่าเป้าหมาย (DancePose)
+        /// แปลง currentAngle กลับเป็น 0-1 ตาม stepAngles
+        /// ใช้สำหรับ DancePoseEvaluator เปรียบเทียบกับท่าเป้าหมาย
         /// </summary>
         public float NormalizedAngle()
         {
@@ -104,23 +93,23 @@ public class FingerToLimbMapper : MonoBehaviour
     }
 
     [Header("=== แขน/ขา ซ้าย (ควบคุมด้วยมือซ้าย) ===")]
-    [Tooltip("นิ้วชี้ซ้าย")]
+    [Tooltip("นิ้วชี้ซ้าย — ยกแขนซ้าย ขึ้น/ลง")]
     public FingerJointMap leftArmLift;
-    [Tooltip("นิ้วกลางซ้าย")]
+    [Tooltip("นิ้วกลางซ้าย — หมุนแขนซ้าย หน้า/หลัง")]
     public FingerJointMap leftArmSwing;
-    [Tooltip("นิ้วนางซ้าย")]
+    [Tooltip("นิ้วนางซ้าย — ยกขาซ้าย ด้านข้าง")]
     public FingerJointMap leftLegLift;
-    [Tooltip("นิ้วก้อยซ้าย")]
+    [Tooltip("นิ้วก้อยซ้าย — ขาซ้าย หน้า/หลัง")]
     public FingerJointMap leftLegSwing;
 
     [Header("=== แขน/ขา ขวา (ควบคุมด้วยมือขวา) ===")]
-    [Tooltip("นิ้วชี้ขวา")]
+    [Tooltip("นิ้วชี้ขวา — ยกแขนขวา ขึ้น/ลง")]
     public FingerJointMap rightArmLift;
-    [Tooltip("นิ้วกลางขวา")]
+    [Tooltip("นิ้วกลางขวา — หมุนแขนขวา หน้า/หลัง")]
     public FingerJointMap rightArmSwing;
-    [Tooltip("นิ้วนางขวา")]
+    [Tooltip("นิ้วนางขวา — ยกขาขวา ด้านข้าง")]
     public FingerJointMap rightLegLift;
-    [Tooltip("นิ้วก้อยขวา")]
+    [Tooltip("นิ้วก้อยขวา — ขาขวา หน้า/หลัง")]
     public FingerJointMap rightLegSwing;
 
     void Update()
@@ -130,20 +119,20 @@ public class FingerToLimbMapper : MonoBehaviour
         FingerData left  = HandDataReceiver.LeftHand;
         FingerData right = HandDataReceiver.RightHand;
 
-        if (left != null)
+        if (HandDataReceiver.LeftHandDetected)
         {
-            leftArmLift.Apply(left.index, dt);
+            leftArmLift.Apply(left.index,  dt);
             leftArmSwing.Apply(left.middle, dt);
-            leftLegLift.Apply(left.ring, dt);
-            leftLegSwing.Apply(left.pinky, dt);
+            leftLegLift.Apply(left.ring,   dt);
+            leftLegSwing.Apply(left.pinky,  dt);
         }
 
-        if (right != null)
+        if (HandDataReceiver.RightHandDetected)
         {
-            rightArmLift.Apply(right.index, dt);
+            rightArmLift.Apply(right.index,  dt);
             rightArmSwing.Apply(right.middle, dt);
-            rightLegLift.Apply(right.ring, dt);
-            rightLegSwing.Apply(right.pinky, dt);
+            rightLegLift.Apply(right.ring,   dt);
+            rightLegSwing.Apply(right.pinky,  dt);
         }
     }
 }

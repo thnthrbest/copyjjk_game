@@ -46,7 +46,10 @@ public class DancePoseEvaluator : MonoBehaviour
         void Check(float actual, float target, string limbName)
         {
             if (target < 0f) return;
-            float s = Score(actual, target);
+            // ชิ้นส่วนที่สุ่มมา (target >= 0) ใช้ targetStepTolerance ที่กว้างกว่า
+            // เพื่อให้ผู้เล่นทำได้ง่ายขึ้น ไม่ต้องแม่นมาก
+            float tol = currentPose.targetStepTolerance;
+            float s = ScoreWithTolerance(actual, target, tol);
             total += s;
             count++;
             if (s < worstAcc) { worstAcc = s; _worstLimb = limbName; }
@@ -114,6 +117,12 @@ public class DancePoseEvaluator : MonoBehaviour
     {
         float diff = Mathf.Abs(actual - target);
         return Mathf.Clamp01(1f - diff / Mathf.Max(currentPose.tolerance, 0.001f));
+    }
+
+    float ScoreWithTolerance(float actual, float target, float tolerance)
+    {
+        float diff = Mathf.Abs(actual - target);
+        return Mathf.Clamp01(1f - diff / Mathf.Max(tolerance, 0.001f));
     }
 
     int CalcStars(float acc)
