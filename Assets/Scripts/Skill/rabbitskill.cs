@@ -38,6 +38,14 @@ public class rabbitskill : MonoBehaviour
 
     public void StartSkill()
     {
+        // Check if skill is unlocked
+        SkillManager sm = GetComponent<SkillManager>();
+        if (sm != null && !sm.IsSkillUnlocked("rabbit"))
+        {
+            Debug.LogWarning("[RabbitSkill] สกิลกระต่ายยังไม่ได้ปลดล็อค! ไม่สามารถใช้งานได้");
+            return;
+        }
+
         PlayerHealth playerHealth = GetComponent<PlayerHealth>();
         if (playerHealth != null)
         {
