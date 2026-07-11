@@ -45,12 +45,12 @@ public class MainMenuController : MonoBehaviour
     }
 
     /// <summary>
-    /// Loads scene stages_1
+    /// Loads scene stage_1
     /// </summary>
     public void PlayGame()
     {
-        Debug.Log("MainMenu: Loading stages_1 scene...");
-        SceneManager.LoadScene("stages_1");
+        Debug.Log("MainMenu: Loading stage_1 scene...");
+        SceneManager.LoadScene("stage_1");
     }
 
     /// <summary>
