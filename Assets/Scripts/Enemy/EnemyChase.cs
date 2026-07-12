@@ -64,11 +64,13 @@ public class EnemyChase : MonoBehaviour
             );
         }
     }
-
+    public void start_walk(){
+        animator.applyRootMotion = true;
+    }
     // =========================
     // เคลื่อนที่เข้าหา Player
     // =========================
-    void MoveToPlayer()
+    public void MoveToPlayer()
     {
         transform.position += transform.forward * moveSpeed * Time.deltaTime;
     }
@@ -80,12 +82,12 @@ public class EnemyChase : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-             Debug.Log("[EnemyChase] โดนผู้เล่นแล้ว");
+            //Debug.Log("[EnemyChase] โดนผู้เล่นแล้ว");
             Destroy(gameObject);
         }
         if (other.CompareTag("dog"))
         {
-            Debug.Log("[EnemyChase] โดนหมาแล้ว");
+            //Debug.Log("[EnemyChase] โดนหมาแล้ว");
             Destroy(gameObject);
         }
     }
