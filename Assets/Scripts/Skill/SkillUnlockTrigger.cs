@@ -19,16 +19,20 @@ public class SkillUnlockTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // 1. ตรวจสอบว่าวัตถุที่มาชนคือผู้เล่น (เช็คจาก Tag หรือมีคอมโพเนนต์ SkillManager)
-        SkillManager skillManager = other.GetComponent<SkillManager>();
-        
-        // เผื่อโครงสร้างตัวละครมีโมเดลแยกอยู่ด้านใน ให้หาใน parent หรือ child
+        // 1. กรองด้วย Tag "Player" ก่อน เพื่อรองรับ CharacterController
+        //    (CharacterController จะส่ง Collider ของตัวเองเข้ามาใน OnTriggerEnter)
+        if (!other.CompareTag("Player")) return;
+
+        // 2. หา SkillManager จาก GameObject ของ CharacterController ขึ้นไปหา parent
+        SkillManager skillManager = other.GetComponentInParent<SkillManager>();
+
+        // fallback: หาบน GameObject ตรงๆ (กรณี SkillManager อยู่บน root เดียวกับ CharacterController)
         if (skillManager == null)
         {
-            skillManager = other.GetComponentInParent<SkillManager>();
+            skillManager = other.GetComponent<SkillManager>();
         }
 
-        // 2. ถ้าเจอผู้เล่นและมี SkillManager
+        // 3. ถ้าเจอผู้เล่นและมี SkillManager
         if (skillManager != null)
         {
             // ดำเนินการปลดล็อคสกิล
