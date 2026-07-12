@@ -83,6 +83,21 @@ public class PlayerHealth : MonoBehaviour
             Die();
     }
 
+    // ─────────────────────────────
+    //  รับดาเมจแบบ DOT (ไฟเผา, พิษ)
+    //  ไม่มี Invincibility Frame เพื่อให้ tick ได้ต่อเนื่อง
+    // ─────────────────────────────
+    public void TakeDamageOverTime(float damage)
+    {
+        if (isDead || godMode) return;
+
+        currentHealth = Mathf.Max(0, currentHealth - damage);
+        UpdateUI();
+
+        if (currentHealth <= 0)
+            Die();
+    }
+
     public void Heal(float amount)
     {
         if (isDead) return;
