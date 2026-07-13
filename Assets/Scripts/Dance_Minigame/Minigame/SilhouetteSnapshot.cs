@@ -94,17 +94,22 @@ public class SilhouetteSnapshot : MonoBehaviour
             renderTexture.width,
             renderTexture.height,
             TextureFormat.RGBA32,
-            false);
+            false);  // false = ไม่สร้าง mipmap ป้องกันภาพเบลอตอนย่อ
         tex.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-        tex.Apply();
+        tex.filterMode = FilterMode.Bilinear; // ใช้ Bilinear ให้ขอบนุ่มแต่คมกว่า Trilinear
+        tex.anisoLevel = 4;                   // เพิ่ม Anisotropic filtering ให้ชัดในมุมเฉียง
+        tex.Apply(false, false);              // false,false = ไม่อัปเดต mipmap, ไม่ makeNoLongerReadable
 
         RenderTexture.active = prev;
 
         // 4. แปลงเป็น Sprite (ภาพนี้เป็นของการ์ดใบนี้โดยเฉพาะ ไม่ถูกแก้ไขซ้ำอีก)
+        // pixelsPerUnit ตั้งให้ตรงกับ width ของ texture
+        // ป้องกัน Unity stretch ภาพจนเบลอในหน้าจอ UI
         Sprite sprite = Sprite.Create(
             tex,
             new Rect(0, 0, tex.width, tex.height),
-            new Vector2(0.5f, 0.5f));
+            new Vector2(0.5f, 0.5f),
+            pixelsPerUnit: tex.width);
 
         // 5. ส่ง Sprite กลับไปให้ผู้เรียก (PoseCard หรือ RhythmLaneUI)
         onDone?.Invoke(sprite);
