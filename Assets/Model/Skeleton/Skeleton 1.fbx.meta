@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 065ac86c14b5ae74682bd24923fb659c
+guid: 669c3cacfbba5104c8c3a610284c482d
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -153,7 +153,7 @@ ModelImporter:
       takeName: Skeleton_Armature|normal_form
       internalID: 2009437292501830722
       firstFrame: 0
-      lastFrame: 60
+      lastFrame: 1
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
