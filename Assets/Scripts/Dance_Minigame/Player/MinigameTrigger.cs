@@ -59,6 +59,11 @@ public class MinigameTrigger : MonoBehaviour
 
     bool _alreadyCompleted;
     bool _isInsideMinigame;
+    float _nextAllowedTriggerTime = 0f;
+
+
+    [Header("client")]
+    public HandInputReceiver handInputReceiver;
 
     void Start()
     {
@@ -70,6 +75,7 @@ public class MinigameTrigger : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+        if (Time.time < _nextAllowedTriggerTime)    return;
         if (_isInsideMinigame)                     return;
         if (oneTimeOnly && _alreadyCompleted)      return;
         if (!other.CompareTag(playerTag))          return;
@@ -79,14 +85,15 @@ public class MinigameTrigger : MonoBehaviour
 
     void StartMinigame()
     {
+        handInputReceiver.StartMinigame();
         if (songForThisTrigger == null)
         {
-            Debug.LogError($"[MinigameTrigger] {name} ไม่ได้ใส่ songForThisTrigger");
+            //Debug.LogError($"[MinigameTrigger] {name} ไม่ได้ใส่ songForThisTrigger");
             return;
         }
         if (minigamePlayer == null)
         {
-            Debug.LogError($"[MinigameTrigger] {name} ไม่ได้ลาก minigamePlayer");
+           // Debug.LogError($"[MinigameTrigger] {name} ไม่ได้ลาก minigamePlayer");
             return;
         }
 
@@ -114,7 +121,7 @@ public class MinigameTrigger : MonoBehaviour
         // รอ calibrate เสร็จก่อนค่อยนับถอยหลัง
         StartCoroutine(WaitForCalibrationThenCountdown());
 
-        Debug.Log($"[MinigameTrigger] เริ่มมินิเกม: {songForThisTrigger.songName}");
+        //Debug.Log($"[MinigameTrigger] เริ่มมินิเกม: {songForThisTrigger.songName}");
     }
 
     IEnumerator WaitForCalibrationThenCountdown()
@@ -122,7 +129,7 @@ public class MinigameTrigger : MonoBehaviour
         // รอจนกว่าจะได้รับ packet จาก Python ก่อน (กันกรณี Python ยังไม่รัน)
         while (!HandDataReceiver.HasReceivedData)
         {
-            Debug.Log("[MinigameTrigger] รอการเชื่อมต่อจาก Python...");
+            //Debug.Log("[MinigameTrigger] รอการเชื่อมต่อจาก Python...");
             yield return new WaitForSeconds(0.5f);
         }
 
@@ -193,7 +200,7 @@ public class MinigameTrigger : MonoBehaviour
         if (passed)
         {
             _alreadyCompleted = true;
-            Debug.Log($"[MinigameTrigger] ผ่าน! ปลดล็อกรางวัล");
+           Debug.Log($"[MinigameTrigger] ผ่าน! ปลดล็อกรางวัล");
             onRewardUnlocked?.Invoke();
         }
         else
@@ -203,5 +210,7 @@ public class MinigameTrigger : MonoBehaviour
             Debug.Log($"[MinigameTrigger] ไม่ผ่าน ลองใหม่ได้");
             onFailed?.Invoke();
         }
+        _nextAllowedTriggerTime = Time.time + 3f; // ตั้ง cooldown 3 วินาที เพื่อกันการเหยียบซ้ำทันที
+        handInputReceiver.StopMinigame();
     }
 }

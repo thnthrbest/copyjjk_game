@@ -51,7 +51,7 @@ public class SkillUnlockTrigger : MonoBehaviour
             }
 
             // 5. ทำลายไอเทมชิ้นนี้ออกจากฉาก
-            Destroy(gameObject);
+           // Destroy(gameObject);
         }
     }
 }

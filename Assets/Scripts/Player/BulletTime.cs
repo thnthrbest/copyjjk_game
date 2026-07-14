@@ -13,6 +13,12 @@ public class BulletTime : MonoBehaviour
     private bool  isActive       = false;
     private float targetTimeScale = 1f;
 
+    /// <summary>true ขณะที่ Bullet Time กำลังทำงาน (slow motion)</summary>
+    public bool IsActive => isActive;
+
+    /// <summary>true เมื่อ timeScale กลับใกล้ปกติแล้ว (threshold 0.95)</summary>
+    public bool IsTimeScaleNormal() => !isActive && Time.timeScale >= 0.95f;
+
     // ─── เรียกจาก HandInputReceiver ───
     public static BulletTime Instance;
 

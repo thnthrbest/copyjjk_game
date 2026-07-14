@@ -36,12 +36,12 @@ public class RhythmLaneUI : MonoBehaviour
     public SilhouetteSnapshot silhouetteSnapshot;
 
     [Header("Progress UI")]
-    [Tooltip("Image ที่จะเปลี่ยน Sprite ตามระดับเปอร์เซ็นต์ที่ทำได้")]
-    public Image progressImage;
-    [Tooltip("0-25%")] public Sprite progressSprite0;
-    [Tooltip("25-50%")] public Sprite progressSprite25;
-    [Tooltip("50-75%")] public Sprite progressSprite50;
-    [Tooltip("75-100%")] public Sprite progressSprite75;
+    [Tooltip("RawImage ที่จะเปลี่ยน RenderTexture ตามระดับเปอร์เซ็นต์ที่ทำได้")]
+    public RawImage progressImage;
+    [Tooltip("0-25%")] public RenderTexture progressSprite0;
+    [Tooltip("25-50%")] public RenderTexture progressSprite25;
+    [Tooltip("50-75%")] public RenderTexture progressSprite50;
+    [Tooltip("75-100%")] public RenderTexture progressSprite75;
     public TextMeshProUGUI feedbackText;
 
     [Header("เกณฑ์")]
@@ -178,14 +178,14 @@ public class RhythmLaneUI : MonoBehaviour
 
         float p = CurrentPercent;
 
-        Sprite target;
+        RenderTexture target;
         if (p < 25f)       target = progressSprite0;
         else if (p < 50f)  target = progressSprite25;
         else if (p < 75f)  target = progressSprite50;
         else               target = progressSprite75;
 
         if (target != null)
-            progressImage.sprite = target;
+            progressImage.texture = target;
     }
 
 #if UNITY_EDITOR
