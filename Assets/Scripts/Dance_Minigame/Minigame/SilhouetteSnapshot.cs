@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,10 +6,6 @@ using UnityEngine.UI;
 /// ถ่ายภาพ SilhouetteCharacter หลังตั้งท่าเสร็จ 1 frame
 /// แล้วแปลงเป็น Sprite ใส่ใน RawImage ของ PoseCard ใบนั้นทันที
 /// ทำให้การ์ดแต่ละใบมีภาพท่าของตัวเองโดยใช้ SilhouetteCharacter แค่ตัวเดียว
-///
-/// สำคัญ: ใช้ระบบคิว ถ่ายภาพทีละคำขอเท่านั้น
-/// เพราะ SilhouetteCharacter มีตัวเดียว ถ้าหลายการ์ด spawn พร้อมกัน
-/// แล้วยิง coroutine ถ่ายภาพซ้อนกัน จะตั้งท่าทับกันจนได้ภาพเดียวกันผิดๆ
 /// </summary>
 public class SilhouetteSnapshot : MonoBehaviour
 {
@@ -23,51 +18,20 @@ public class SilhouetteSnapshot : MonoBehaviour
     [Header("PoseSilhouetteBuilder ของ SilhouetteCharacter")]
     public PoseSilhouetteBuilder silhouetteBuilder;
 
-    struct CaptureRequest
-    {
-        public RandomPoseGenerator.LimbPart limb;
-        public float targetValue;
-        public System.Action<Sprite> onDone;
-    }
-
-    readonly Queue<CaptureRequest> _queue = new Queue<CaptureRequest>();
-    bool _isProcessing = false;
-
     // ────────────────────────────────────────────────
     // เรียกจาก RhythmLaneUI ตอน Spawn การ์ดใหม่
     // ────────────────────────────────────────────────
 
     /// <summary>
-    /// ขอถ่ายภาพท่าใหม่ — ถ้ามีคำขออื่นกำลังถ่ายอยู่ จะเข้าคิวรอ
-    /// ไม่ทำพร้อมกันเด็ดขาด เพื่อกันท่าปนกัน
+    /// ตั้งท่าให้ SilhouetteCharacter แล้วถ่ายภาพ 1 frame
+    /// เมื่อได้ภาพแล้วจะเรียก onDone(sprite) เพื่อส่ง Sprite ไปให้ PoseCard
     /// </summary>
     public void CaptureForCard(
         RandomPoseGenerator.LimbPart limb,
         float targetValue,
         System.Action<Sprite> onDone)
     {
-        _queue.Enqueue(new CaptureRequest
-        {
-            limb        = limb,
-            targetValue = targetValue,
-            onDone      = onDone
-        });
-
-        if (!_isProcessing)
-            StartCoroutine(ProcessQueue());
-    }
-
-    IEnumerator ProcessQueue()
-    {
-        _isProcessing = true;
-
-        while (_queue.Count > 0)
-        {
-            CaptureRequest req = _queue.Dequeue();
-            yield return CaptureRoutine(req.limb, req.targetValue, req.onDone);
-        }
-
-        _isProcessing = false;
+        StartCoroutine(CaptureRoutine(limb, targetValue, onDone));
     }
 
     IEnumerator CaptureRoutine(
@@ -79,7 +43,6 @@ public class SilhouetteSnapshot : MonoBehaviour
         if (silhouetteBuilder != null)
         {
             silhouetteBuilder.ResetHighlight();
-            silhouetteBuilder.ResetPose();
             silhouetteBuilder.ApplyPartialPose(limb, targetValue);
         }
 
@@ -94,22 +57,17 @@ public class SilhouetteSnapshot : MonoBehaviour
             renderTexture.width,
             renderTexture.height,
             TextureFormat.RGBA32,
-            false);  // false = ไม่สร้าง mipmap ป้องกันภาพเบลอตอนย่อ
+            false);
         tex.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-        tex.filterMode = FilterMode.Bilinear; // ใช้ Bilinear ให้ขอบนุ่มแต่คมกว่า Trilinear
-        tex.anisoLevel = 4;                   // เพิ่ม Anisotropic filtering ให้ชัดในมุมเฉียง
-        tex.Apply(false, false);              // false,false = ไม่อัปเดต mipmap, ไม่ makeNoLongerReadable
+        tex.Apply();
 
         RenderTexture.active = prev;
 
-        // 4. แปลงเป็น Sprite (ภาพนี้เป็นของการ์ดใบนี้โดยเฉพาะ ไม่ถูกแก้ไขซ้ำอีก)
-        // pixelsPerUnit ตั้งให้ตรงกับ width ของ texture
-        // ป้องกัน Unity stretch ภาพจนเบลอในหน้าจอ UI
+        // 4. แปลงเป็น Sprite
         Sprite sprite = Sprite.Create(
             tex,
             new Rect(0, 0, tex.width, tex.height),
-            new Vector2(0.5f, 0.5f),
-            pixelsPerUnit: tex.width);
+            new Vector2(0.5f, 0.5f));
 
         // 5. ส่ง Sprite กลับไปให้ผู้เรียก (PoseCard หรือ RhythmLaneUI)
         onDone?.Invoke(sprite);

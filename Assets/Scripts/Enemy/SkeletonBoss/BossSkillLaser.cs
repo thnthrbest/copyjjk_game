@@ -4,99 +4,141 @@ using UnityEngine;
 
 public class BossSkillLaser : MonoBehaviour
 {
+    [Header("Cooldown Settings")]
+    [SerializeField] private float skillCooldown = 5f;
+
     [Header("Animation Settings")]
     [SerializeField] private Animator bossAnimator;
-    [SerializeField] private string startTrigger = "EyeLaserStart"; // ท่าเริ่มชาร์จพลัง
-    [SerializeField] private string endTrigger = "EyeLaserEnd";     // ท่าจบสกิล
+    [SerializeField] private string startTrigger = "EyeLaserStart"; 
+    [SerializeField] private string endTrigger = "EyeLaserEnd";
+    [SerializeField] private float vfxSpawnDelay = 0.5f; // << ระยะเวลารอให้อนิเมชันเล่นถึงจุดที่เริ่มชาร์จ
 
     [Header("Prefab Settings")]
-    [SerializeField] private GameObject laserGridPrefab;    // พรีแฟบแผงเลเซอร์ (Laser_Grid)
+    [SerializeField] private GameObject laserGridPrefab;    
+    
+    [Header("VFX Stages (ชาร์จพลัง 2 ขั้น)")]
+    [SerializeField] private GameObject chargeStage1Prefab; // ขั้นที่ 1: ออร่ารวบรวมพลังงาน
+    [SerializeField] private GameObject chargeStage2Prefab; // ขั้นที่ 2: บอลพลังงานเข้มข้น (Power Ball)
 
     [Header("Dual Eye References (3D)")]
-    [SerializeField] private Transform leftEyeSpawnPoint;   // จุดตาซ้าย (แกน Z สีน้ำเงินต้องชี้ไปข้างหน้าบอส)
-    [SerializeField] private Transform rightEyeSpawnPoint;  // จุดตาขวา (แกน Z สีน้ำเงินต้องชี้ไปข้างหน้าบอส)
+    [SerializeField] private Transform leftEyeSpawnPoint;   
+    [SerializeField] private Transform rightEyeSpawnPoint;  
     
     private Transform playerTransform;                      
     private GameObject leftLaserInstance;
     private GameObject rightLaserInstance;
 
     [Header("Timing Settings")]
-    [SerializeField] private float lockOnDuration = 2.0f;   // เวลาชาร์จพลัง + หมุนตามผู้เล่น (หน่วยเป็นวินาที)
-    [SerializeField] private float laserDuration = 3.0f;    // เวลายิงเลเซอร์แช่ค้างไว้กับที่ (หน่วยเป็นวินาที)
-    [SerializeField] private float recoveryDuration = 1.5f; // เวลาบอสพักเหนื่อยหลังยิงเสร็จ
+    [SerializeField] private float lockOnDuration = 3.0f;   // เวลาชาร์จทั้งหมด
+    [Range(0.1f, 0.9f)]
+    [SerializeField] private float stage2Threshold = 0.5f;  // จุดเปลี่ยนขั้นที่ 2 (เช่น 0.5 คือผ่านไปครึ่งทางของเวลาชาร์จ)
+    [SerializeField] private float laserDuration = 3.0f;    
+    [SerializeField] private float recoveryDuration = 1.5f; 
+
+    private bool isSkillRunning = false; 
+    private float cooldownTimer = 0f;
 
     void Start()
     {
-        // ค้นหาผู้เล่นอัตโนมัติในฉากด้วย Tag
         GameObject player = GameObject.FindWithTag("Player");
         if (player != null) playerTransform = player.transform;
+    }
+
+    void Update()
+    {
+        if (cooldownTimer > 0) cooldownTimer -= Time.deltaTime;
+    }
+
+    public void TryActivateSkill()
+    {
+        if (!isSkillRunning && cooldownTimer <= 0) StartCoroutine(ExecuteSkill());
     }
 
     public IEnumerator ExecuteSkill()
     {
         if (laserGridPrefab == null || leftEyeSpawnPoint == null || rightEyeSpawnPoint == null || playerTransform == null) yield break;
 
-        // ===================================================
-        // 🎬 เฟสที่ 1: เริ่มชาร์จพลัง + ตาหมุนล็อกเป้าตามผู้เล่น
-        // ===================================================
-        if (bossAnimator != null) bossAnimator.SetTrigger(startTrigger);
+        isSkillRunning = true; 
 
-        // เสกแผงเลเซอร์มารอไว้ที่ตาซ้ายและขวา (ตัวลำแสงข้างในยังปิดซ่อนอยู่)
+        // ----------------------------------------------------
+        // 🎬 เฟสเริ่ม: เล่นแอนิเมชัน และ รอจังหวะ (Delay)
+        // ----------------------------------------------------
+        if (bossAnimator != null) bossAnimator.SetTrigger(startTrigger);
+        yield return new WaitForSeconds(vfxSpawnDelay);
+
+        // ----------------------------------------------------
+        // 🎯 เฟสที่ 1: เริ่มชาร์จพลังขั้นที่ 1 (ออร่ารวบรวม) + หมุนล็อกตาม
+        // ----------------------------------------------------
+        GameObject leftVFX = Instantiate(chargeStage1Prefab, leftEyeSpawnPoint.position, Quaternion.identity);
+        GameObject rightVFX = Instantiate(chargeStage1Prefab, rightEyeSpawnPoint.position, Quaternion.identity);
+
         leftLaserInstance = Instantiate(laserGridPrefab, leftEyeSpawnPoint.position, leftEyeSpawnPoint.rotation, leftEyeSpawnPoint);
         rightLaserInstance = Instantiate(laserGridPrefab, rightEyeSpawnPoint.position, rightEyeSpawnPoint.rotation, rightEyeSpawnPoint);
+        LaserGridController leftL = leftLaserInstance.GetComponent<LaserGridController>();
+        LaserGridController rightL = rightLaserInstance.GetComponent<LaserGridController>();
 
-        LaserGridController leftController = leftLaserInstance.GetComponent<LaserGridController>();
-        LaserGridController rightController = rightLaserInstance.GetComponent<LaserGridController>();
-
-        // ลูปทำงานตลอดช่วงเวลาชาร์จพลัง (ตามค่า lockOnDuration)
+        bool isStage2Active = false;
         float timer = 0f;
         while (timer < lockOnDuration)
         {
             if (playerTransform != null)
             {
                 Vector3 targetPos = playerTransform.position;
-
-                // อัปเดตมุมหันของตาทั้งสองข้างให้จ้องตามผู้เล่นแบบ 3D ทุกเฟรม
                 RotateEyeToTarget3D(leftEyeSpawnPoint, targetPos);
                 RotateEyeToTarget3D(rightEyeSpawnPoint, targetPos);
+                
+                // ให้ VFX วิ่งตามตำแหน่งตา (ใช้ World Space เพื่อกันปัญหา Scale)
+                if (leftVFX != null) leftVFX.transform.position = leftEyeSpawnPoint.position;
+                if (rightVFX != null) rightVFX.transform.position = rightEyeSpawnPoint.position;
+            }
+
+            // ----------------------------------------------------
+            // 🔥 ตรวจสอบจุดเปลี่ยนสู่ขั้นที่ 2 (บอลพลังงาน)
+            // ----------------------------------------------------
+            if (!isStage2Active && timer >= lockOnDuration * stage2Threshold)
+            {
+                isStage2Active = true;
+                // ลบออร่าอันเดิมออก
+                if (leftVFX != null) Destroy(leftVFX);
+                if (rightVFX != null) Destroy(rightVFX);
+                // เสกบอลพลังงานอันใหม่มาแทน
+                leftVFX = Instantiate(chargeStage2Prefab, leftEyeSpawnPoint.position, Quaternion.identity);
+                rightVFX = Instantiate(chargeStage2Prefab, rightEyeSpawnPoint.position, Quaternion.identity);
             }
 
             timer += Time.deltaTime;
-            yield return null; // รอเฟรมถัดไป
+            yield return null; 
         }
 
-        // ===================================================
-        // 🛑 เฟสที่ 2: ชาร์จเสร็จแล้ว! หยุดหมุนตาม + เปิดฉากยิงจุดสุดท้าย
-        // ===================================================
-        // เมื่อหลุดลูปด้านบน ตาบอสจะ "หยุดล็อกตาม" และค้างอยู่ที่ตำแหน่งผู้เล่น ณ วินาทีนั้นทันที
-        Debug.Log("🔒 ล็อกพิกัดสุดท้ายสำเร็จ! ระเบิดลำแสงคู่แช่กับที่!");
-        
-        // สั่งระเบิดลำแสงเลเซอร์ทรงกระบอกคู่พุ่งตรงออกจากเบ้าตาที่ค้างอยู่
-        if (leftController != null) leftController.ActivateFullLaser(true);
-        if (rightController != null) rightController.ActivateFullLaser(true);
+        // ----------------------------------------------------
+        // 🛑 เฟสที่ 2: หยุดหมุน + ลบเอฟเฟกต์ชาร์จ -> ยิงเลเซอร์
+        // ----------------------------------------------------
+        if (leftVFX != null) Destroy(leftVFX);
+        if (rightVFX != null) Destroy(rightVFX);
 
-        // ยิงแช่ค้างไว้ตรงจุดนั้น (ผู้เล่นสามารถแดช/วิ่งหลบออกจากวิถีเลเซอร์ได้แล้ว)
+        if (leftL != null) leftL.ActivateFullLaser(true);
+        if (rightL != null) rightL.ActivateFullLaser(true);
+
         yield return new WaitForSeconds(laserDuration);
 
-        // ===================================================
-        // 🧹 เฟสที่ 3: ยิงเสร็จเรียบร้อย ปิดเลเซอร์และเคลียร์ของ
-        // ===================================================
-        if (leftController != null) leftController.ActivateFullLaser(false);
-        if (rightController != null) rightController.ActivateFullLaser(false);
-        
+        // ----------------------------------------------------
+        // 🧹 เฟสจบ: ปิดเลเซอร์ เคลียร์สนาม
+        // ----------------------------------------------------
+        if (leftL != null) leftL.ActivateFullLaser(false);
+        if (rightL != null) rightL.ActivateFullLaser(false);
         if (leftLaserInstance != null) Destroy(leftLaserInstance);
         if (rightLaserInstance != null) Destroy(rightLaserInstance);
         
-        // เล่นอนิเมชันจบ/พักเหนื่อย
         if (bossAnimator != null) bossAnimator.SetTrigger(endTrigger);
         yield return new WaitForSeconds(recoveryDuration);
+
+        cooldownTimer = skillCooldown;
+        isSkillRunning = false; 
     }
 
-    // ฟังก์ชันคำนวณการหันวัตถุในโลก 3 มิติ (หันแกน Z ชี้หาเป้าหมาย)
     private void RotateEyeToTarget3D(Transform eyeTransform, Vector3 targetPosition)
     {
         Vector3 targetDirection = targetPosition - eyeTransform.position;
-        
         if (targetDirection != Vector3.zero)
         {
             Quaternion targetRotation = Quaternion.LookRotation(targetDirection);

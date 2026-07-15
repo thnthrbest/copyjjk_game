@@ -1,13 +1,15 @@
 using UnityEngine;
 
 /// <summary>
-/// แปลงค่านิ้ว (0-1) จาก HandDataReceiver เป็นการหมุน localEulerAngles
-/// ของข้อต่อแขน/ขาแต่ละจุด โดยใช้ stepAngles array ที่ปรับได้ใน Inspector
+/// Mapping นิ้วมือ → แขนขา (เวอร์ชันใหม่):
+///   นิ้วโป้ง  → ขาหน้า/หลัง
+///   นิ้วชี้   → แขนหน้า/หลัง
+///   นิ้วกลาง → แขนขึ้น/ลง
+///   นิ้วนาง  → ไม่ใช้
+///   นิ้วก้อย → ไม่ใช้
 ///
-/// Mapping:
-///   มือซ้าย: index=ยกแขน, middle=หมุนแขนหน้า/หลัง, ring=ยกขาด้านข้าง, pinky=ขาหน้า/หลัง
-///   มือขวา: เหมือนกันสมมาตร
-///   (นิ้วโป้งทั้งสองข้างไม่ใช้)
+///   ซ้ายคุมซ้าย ขวาคุมขวา (สมมาตร)
+///   ไม่มีการยกขาด้านข้างอีกต่อไป
 /// </summary>
 public class FingerToLimbMapper : MonoBehaviour
 {
@@ -31,20 +33,14 @@ public class FingerToLimbMapper : MonoBehaviour
         public bool invert = false;
 
         [Header("ขั้นองศา — ใส่กี่ค่าก็ได้ ค่านิ้ว 0-1 จะ interpolate ระหว่างขั้น")]
-        [Tooltip("ตัวอย่างแขน 5 ขั้น: -90, -45, 0, 45, 90\nตัวอย่างขา 3 ขั้น: -30, 0, 45")]
+        [Tooltip("ตัวอย่างแขน 3 ขั้น: -90, 0, 90\nตัวอย่างขา 3 ขั้น: -45, 0, 45")]
         public float[] stepAngles = { -90f, 0f, 90f };
 
         [Header("ความนุ่มนวล")]
         public float smoothSpeed = 8f;
 
-        /// <summary>มุมปัจจุบันที่ smooth แล้ว (องศา)</summary>
         [HideInInspector] public float currentAngle;
 
-        /// <summary>
-        /// แปลงค่านิ้ว (0-1) เป็นองศาโดย interpolate ระหว่าง stepAngles
-        /// ค่านิ้ว 0.0 = stepAngles[0], ค่านิ้ว 1.0 = stepAngles[สุดท้าย]
-        /// ค่าระหว่างขั้นจะ interpolate ไหลผ่านได้เลย ไม่มีการ snap
-        /// </summary>
         public float GetTargetAngle(float fingerValue)
         {
             if (stepAngles == null || stepAngles.Length == 0) return 0f;
@@ -60,7 +56,6 @@ public class FingerToLimbMapper : MonoBehaviour
             return Mathf.Lerp(stepAngles[lo], stepAngles[hi], frac);
         }
 
-        /// <summary>คำนวณและหมุน joint ตามค่านิ้ว (0-1)</summary>
         public void Apply(float fingerValue, float dt)
         {
             if (joint == null) return;
@@ -78,10 +73,6 @@ public class FingerToLimbMapper : MonoBehaviour
             joint.localEulerAngles = e;
         }
 
-        /// <summary>
-        /// แปลง currentAngle กลับเป็น 0-1 ตาม stepAngles
-        /// ใช้สำหรับ DancePoseEvaluator เปรียบเทียบกับท่าเป้าหมาย
-        /// </summary>
         public float NormalizedAngle()
         {
             if (stepAngles == null || stepAngles.Length <= 1) return 0f;
@@ -92,24 +83,20 @@ public class FingerToLimbMapper : MonoBehaviour
         }
     }
 
-    [Header("=== แขน/ขา ซ้าย (ควบคุมด้วยมือซ้าย) ===")]
-    [Tooltip("นิ้วชี้ซ้าย — ยกแขนซ้าย ขึ้น/ลง")]
+    [Header("=== ฝั่งซ้าย (ควบคุมด้วยมือซ้าย) ===")]
+    [Tooltip("นิ้วกลางซ้าย — แขนซ้ายขึ้น/ลง")]
     public FingerJointMap leftArmLift;
-    [Tooltip("นิ้วกลางซ้าย — หมุนแขนซ้าย หน้า/หลัง")]
+    [Tooltip("นิ้วชี้ซ้าย — แขนซ้ายหน้า/หลัง")]
     public FingerJointMap leftArmSwing;
-    [Tooltip("นิ้วนางซ้าย — ยกขาซ้าย ด้านข้าง")]
-    public FingerJointMap leftLegLift;
-    [Tooltip("นิ้วก้อยซ้าย — ขาซ้าย หน้า/หลัง")]
+    [Tooltip("นิ้วโป้งซ้าย — ขาซ้ายหน้า/หลัง")]
     public FingerJointMap leftLegSwing;
 
-    [Header("=== แขน/ขา ขวา (ควบคุมด้วยมือขวา) ===")]
-    [Tooltip("นิ้วชี้ขวา — ยกแขนขวา ขึ้น/ลง")]
+    [Header("=== ฝั่งขวา (ควบคุมด้วยมือขวา) ===")]
+    [Tooltip("นิ้วกลางขวา — แขนขวาขึ้น/ลง")]
     public FingerJointMap rightArmLift;
-    [Tooltip("นิ้วกลางขวา — หมุนแขนขวา หน้า/หลัง")]
+    [Tooltip("นิ้วชี้ขวา — แขนขวาหน้า/หลัง")]
     public FingerJointMap rightArmSwing;
-    [Tooltip("นิ้วนางขวา — ยกขาขวา ด้านข้าง")]
-    public FingerJointMap rightLegLift;
-    [Tooltip("นิ้วก้อยขวา — ขาขวา หน้า/หลัง")]
+    [Tooltip("นิ้วโป้งขวา — ขาขวาหน้า/หลัง")]
     public FingerJointMap rightLegSwing;
 
     void Update()
@@ -121,18 +108,16 @@ public class FingerToLimbMapper : MonoBehaviour
 
         if (HandDataReceiver.LeftHandDetected)
         {
-            leftArmLift.Apply(left.index,  dt);
-            leftArmSwing.Apply(left.middle, dt);
-            leftLegLift.Apply(left.ring,   dt);
-            leftLegSwing.Apply(left.pinky,  dt);
+            leftArmLift.Apply(left.middle, dt);   // นิ้วกลาง → แขนขึ้น/ลง
+            leftArmSwing.Apply(left.index,  dt);   // นิ้วชี้   → แขนหน้า/หลัง
+            leftLegSwing.Apply(left.thumb,  dt);   // นิ้วโป้ง  → ขาหน้า/หลัง
         }
 
         if (HandDataReceiver.RightHandDetected)
         {
-            rightArmLift.Apply(right.index,  dt);
-            rightArmSwing.Apply(right.middle, dt);
-            rightLegLift.Apply(right.ring,   dt);
-            rightLegSwing.Apply(right.pinky,  dt);
+            rightArmLift.Apply(right.middle, dt);
+            rightArmSwing.Apply(right.index,  dt);
+            rightLegSwing.Apply(right.thumb,  dt);
         }
     }
 }

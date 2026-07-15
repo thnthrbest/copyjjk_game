@@ -65,7 +65,7 @@ ModelImporter:
       name: Skeleton_Armature|Attack__laser_form
       takeName: Skeleton_Armature|Attack__laser_form
       internalID: 8159220140612718905
-      firstFrame: 0
+      firstFrame: 65
       lastFrame: 90
       wrapMode: 0
       orientationOffsetY: 0

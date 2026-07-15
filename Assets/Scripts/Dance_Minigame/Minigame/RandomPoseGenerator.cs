@@ -9,6 +9,10 @@ using System.IO;
 ///   1) ส่งให้ DancePoseEvaluator ใช้เป็นเป้าหมายเช็คท่าจริงของผู้เล่น
 ///   2) ส่งให้ PoseSilhouetteBuilder ใช้วาดเงาใบ้ท่าให้ผู้เล่นทำตาม
 ///
+/// จุดควบคุมใหม่ (6 จุด ไม่มี LegLift แล้ว):
+///   LeftArmLift, LeftArmSwing, LeftLegSwing
+///   RightArmLift, RightArmSwing, RightLegSwing
+///
 /// ดึงจำนวนขั้นจาก FingerToLimbMapper โดยตรง ไม่ต้องตั้งซ้ำ
 /// รองรับการจำกัดว่าเพลงนี้สุ่มได้แค่ส่วนไหน (แขนซ้าย/ขวา, ขาซ้าย/ขวา)
 /// </summary>
@@ -16,10 +20,8 @@ public class RandomPoseGenerator : MonoBehaviour
 {
     public enum LimbPart
     {
-        LeftArmLift, LeftArmSwing,
-        RightArmLift, RightArmSwing,
-        LeftLegLift, LeftLegSwing,
-        RightLegLift, RightLegSwing
+        LeftArmLift, LeftArmSwing, LeftLegSwing,
+        RightArmLift, RightArmSwing, RightLegSwing
     }
 
     [Header("ดึงการตั้งค่าจาก FingerToLimbMapper")]
@@ -73,12 +75,12 @@ public class RandomPoseGenerator : MonoBehaviour
     [ContextMenu("สุ่มท่าใหม่ทันที")]
     public DancePose GenerateNewChallenge()
     {
-        // 1) รวบรวม LimbPart ที่อนุญาตให้สุ่ม
+        // 1) รวบรวม LimbPart ที่อนุญาตให้สุ่ม (แต่ละข้างเหลือแค่ 3 field ต่อฝั่ง)
         var allowed = new System.Collections.Generic.List<LimbPart>();
         if (allowLeftArm)  { allowed.Add(LimbPart.LeftArmLift);  allowed.Add(LimbPart.LeftArmSwing);  }
+        if (allowLeftLeg)  { allowed.Add(LimbPart.LeftLegSwing); }
         if (allowRightArm) { allowed.Add(LimbPart.RightArmLift); allowed.Add(LimbPart.RightArmSwing); }
-        if (allowLeftLeg)  { allowed.Add(LimbPart.LeftLegLift);  allowed.Add(LimbPart.LeftLegSwing);  }
-        if (allowRightLeg) { allowed.Add(LimbPart.RightLegLift); allowed.Add(LimbPart.RightLegSwing); }
+        if (allowRightLeg) { allowed.Add(LimbPart.RightLegSwing); }
 
         if (allowed.Count == 0)
         {
@@ -95,15 +97,13 @@ public class RandomPoseGenerator : MonoBehaviour
 
         // 4) สร้าง DancePose ที่มีค่าแค่ชิ้นส่วนที่สุ่ม ที่เหลือ = -1 (ไม่เช็ค)
         DancePose pose = ScriptableObject.CreateInstance<DancePose>();
-        pose.poseName                = $"{CurrentLimb}_{_rng.Next(100, 999)}";
-        pose.tolerance               = defaultTolerance;
-        pose.targetStepTolerance     = defaultTargetStepTolerance;
-        pose.holdTime                = defaultHoldTime;
+        pose.poseName            = $"{CurrentLimb}_{_rng.Next(100, 999)}";
+        pose.tolerance           = defaultTolerance;
+        pose.targetStepTolerance = defaultTargetStepTolerance;
+        pose.holdTime            = defaultHoldTime;
 
-        pose.leftArmLift   = -1f; pose.leftArmSwing  = -1f;
-        pose.leftLegLift   = -1f; pose.leftLegSwing  = -1f;
-        pose.rightArmLift  = -1f; pose.rightArmSwing = -1f;
-        pose.rightLegLift  = -1f; pose.rightLegSwing = -1f;
+        pose.leftArmLift  = -1f; pose.leftArmSwing  = -1f; pose.leftLegSwing  = -1f;
+        pose.rightArmLift = -1f; pose.rightArmSwing = -1f; pose.rightLegSwing = -1f;
 
         SetPoseValue(pose, CurrentLimb, targetValue);
 
@@ -149,11 +149,9 @@ public class RandomPoseGenerator : MonoBehaviour
         {
             LimbPart.LeftArmLift   => sourceMapper.leftArmLift,
             LimbPart.LeftArmSwing  => sourceMapper.leftArmSwing,
+            LimbPart.LeftLegSwing  => sourceMapper.leftLegSwing,
             LimbPart.RightArmLift  => sourceMapper.rightArmLift,
             LimbPart.RightArmSwing => sourceMapper.rightArmSwing,
-            LimbPart.LeftLegLift   => sourceMapper.leftLegLift,
-            LimbPart.LeftLegSwing  => sourceMapper.leftLegSwing,
-            LimbPart.RightLegLift  => sourceMapper.rightLegLift,
             LimbPart.RightLegSwing => sourceMapper.rightLegSwing,
             _                      => null
         };
@@ -165,11 +163,9 @@ public class RandomPoseGenerator : MonoBehaviour
         {
             case LimbPart.LeftArmLift:   pose.leftArmLift   = value; break;
             case LimbPart.LeftArmSwing:  pose.leftArmSwing  = value; break;
+            case LimbPart.LeftLegSwing:  pose.leftLegSwing  = value; break;
             case LimbPart.RightArmLift:  pose.rightArmLift  = value; break;
             case LimbPart.RightArmSwing: pose.rightArmSwing = value; break;
-            case LimbPart.LeftLegLift:   pose.leftLegLift   = value; break;
-            case LimbPart.LeftLegSwing:  pose.leftLegSwing  = value; break;
-            case LimbPart.RightLegLift:  pose.rightLegLift  = value; break;
             case LimbPart.RightLegSwing: pose.rightLegSwing = value; break;
         }
     }
@@ -178,10 +174,8 @@ public class RandomPoseGenerator : MonoBehaviour
     {
         if (sourceMapper == null) return 0;
         long s(FingerToLimbMapper.FingerJointMap m) => m?.stepAngles?.Length ?? 1;
-        return s(sourceMapper.leftArmLift)  * s(sourceMapper.leftArmSwing)
-             * s(sourceMapper.leftLegLift)  * s(sourceMapper.leftLegSwing)
-             * s(sourceMapper.rightArmLift) * s(sourceMapper.rightArmSwing)
-             * s(sourceMapper.rightLegLift) * s(sourceMapper.rightLegSwing);
+        return s(sourceMapper.leftArmLift)  * s(sourceMapper.leftArmSwing)  * s(sourceMapper.leftLegSwing)
+             * s(sourceMapper.rightArmLift) * s(sourceMapper.rightArmSwing) * s(sourceMapper.rightLegSwing);
     }
 
 #if UNITY_EDITOR
