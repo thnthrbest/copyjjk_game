@@ -139,11 +139,9 @@ public class BeatmapPlayer : MonoBehaviour
         {
             RandomPoseGenerator.LimbPart.LeftArmLift   => pose.leftArmLift,
             RandomPoseGenerator.LimbPart.LeftArmSwing  => pose.leftArmSwing,
+            RandomPoseGenerator.LimbPart.LeftLegSwing  => pose.leftLegSwing,
             RandomPoseGenerator.LimbPart.RightArmLift  => pose.rightArmLift,
             RandomPoseGenerator.LimbPart.RightArmSwing => pose.rightArmSwing,
-            RandomPoseGenerator.LimbPart.LeftLegLift   => pose.leftLegLift,
-            RandomPoseGenerator.LimbPart.LeftLegSwing  => pose.leftLegSwing,
-            RandomPoseGenerator.LimbPart.RightLegLift  => pose.rightLegLift,
             RandomPoseGenerator.LimbPart.RightLegSwing => pose.rightLegSwing,
             _                                          => 0f
         };
