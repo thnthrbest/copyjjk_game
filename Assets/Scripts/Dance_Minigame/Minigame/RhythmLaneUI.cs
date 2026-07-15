@@ -64,7 +64,7 @@ public class RhythmLaneUI : MonoBehaviour
     int _successCount;
     int _judgedCount;
 
-    public float CurrentPercent => totalCues > 0 ? (_successCount / (float)totalCues) * 100f : 0f;
+    public float CurrentPercent => totalCues > 0 ? (_successCount / (float)totalCues) * 200f : 0f;
     public bool  IsStagePassed  => CurrentPercent >= stagePassPercent && _judgedCount >= totalCues;
 
     // เรียกตอนเริ่มเพลงใหม่ เพื่อ reset และบอกจำนวนท่าทั้งหมด
@@ -174,9 +174,14 @@ public class RhythmLaneUI : MonoBehaviour
 
     void UpdatePercentUI()
     {
-        if (progressImage == null) return;
+        if (progressImage == null)
+        {
+            Debug.LogWarning("[RhythmLaneUI] progressImage เป็น null — กรุณา assign ใน Inspector");
+            return;
+        }
 
         float p = CurrentPercent;
+        Debug.Log($"[RhythmLaneUI] UpdatePercentUI: success={_successCount}, judged={_judgedCount}, total={totalCues}, percent={p:F1}%");
 
         RenderTexture target;
         if (p < 25f)       target = progressSprite0;
@@ -184,8 +189,14 @@ public class RhythmLaneUI : MonoBehaviour
         else if (p < 75f)  target = progressSprite50;
         else               target = progressSprite75;
 
-        if (target != null)
-            progressImage.texture = target;
+        if (target == null)
+        {
+            Debug.LogWarning($"[RhythmLaneUI] RenderTexture สำหรับ {p:F1}% เป็น null — กรุณา assign ใน Inspector");
+            return;
+        }
+
+        progressImage.texture = target;
+        Debug.Log($"[RhythmLaneUI] เปลี่ยน texture เป็น {target.name} (percent={p:F1}%)");
     }
 
 #if UNITY_EDITOR
