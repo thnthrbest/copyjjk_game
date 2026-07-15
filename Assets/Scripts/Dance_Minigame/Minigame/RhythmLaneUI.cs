@@ -36,12 +36,12 @@ public class RhythmLaneUI : MonoBehaviour
     public SilhouetteSnapshot silhouetteSnapshot;
 
     [Header("Progress UI")]
-    [Tooltip("Image ที่จะเปลี่ยน Sprite ตามระดับเปอร์เซ็นต์ที่ทำได้")]
-    public Image progressImage;
-    [Tooltip("0-25%")] public Sprite progressSprite0;
-    [Tooltip("25-50%")] public Sprite progressSprite25;
-    [Tooltip("50-75%")] public Sprite progressSprite50;
-    [Tooltip("75-100%")] public Sprite progressSprite75;
+    [Tooltip("RawImage ที่จะเปลี่ยน RenderTexture ตามระดับเปอร์เซ็นต์ที่ทำได้")]
+    public RawImage progressImage;
+    [Tooltip("0-25%")] public RenderTexture progressSprite0;
+    [Tooltip("25-50%")] public RenderTexture progressSprite25;
+    [Tooltip("50-75%")] public RenderTexture progressSprite50;
+    [Tooltip("75-100%")] public RenderTexture progressSprite75;
     public TextMeshProUGUI feedbackText;
 
     [Header("เกณฑ์")]
@@ -64,7 +64,7 @@ public class RhythmLaneUI : MonoBehaviour
     int _successCount;
     int _judgedCount;
 
-    public float CurrentPercent => totalCues > 0 ? (_successCount / (float)totalCues) * 100f : 0f;
+    public float CurrentPercent => totalCues > 0 ? (_successCount / (float)totalCues) * 200f : 0f;
     public bool  IsStagePassed  => CurrentPercent >= stagePassPercent && _judgedCount >= totalCues;
 
     // เรียกตอนเริ่มเพลงใหม่ เพื่อ reset และบอกจำนวนท่าทั้งหมด
@@ -174,18 +174,29 @@ public class RhythmLaneUI : MonoBehaviour
 
     void UpdatePercentUI()
     {
-        if (progressImage == null) return;
+        if (progressImage == null)
+        {
+            Debug.LogWarning("[RhythmLaneUI] progressImage เป็น null — กรุณา assign ใน Inspector");
+            return;
+        }
 
         float p = CurrentPercent;
+        Debug.Log($"[RhythmLaneUI] UpdatePercentUI: success={_successCount}, judged={_judgedCount}, total={totalCues}, percent={p:F1}%");
 
-        Sprite target;
+        RenderTexture target;
         if (p < 25f)       target = progressSprite0;
         else if (p < 50f)  target = progressSprite25;
         else if (p < 75f)  target = progressSprite50;
         else               target = progressSprite75;
 
-        if (target != null)
-            progressImage.sprite = target;
+        if (target == null)
+        {
+            Debug.LogWarning($"[RhythmLaneUI] RenderTexture สำหรับ {p:F1}% เป็น null — กรุณา assign ใน Inspector");
+            return;
+        }
+
+        progressImage.texture = target;
+        Debug.Log($"[RhythmLaneUI] เปลี่ยน texture เป็น {target.name} (percent={p:F1}%)");
     }
 
 #if UNITY_EDITOR

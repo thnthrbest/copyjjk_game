@@ -77,13 +77,13 @@ public class FireBullet : MonoBehaviour
             SpawnImpactVFX();
             Destroy(gameObject);
         }
-        // ชนกับสิ่งแวดล้อม (ไม่ใช่ Player)
-        else if (!other.isTrigger && !other.CompareTag("Enemy") && !other.CompareTag("Bullet"))
-        {
-            hasHit = true;
-            SpawnImpactVFX();
-            Destroy(gameObject);
-        }
+        // // ชนกับสิ่งแวดล้อม (ไม่ใช่ Player)
+        // else if (!other.isTrigger && !other.CompareTag("Enemy") && !other.CompareTag("Bullet"))
+        // {
+        //     hasHit = true;
+        //     SpawnImpactVFX();
+        //     Destroy(gameObject);
+        // }
     }
 
     void OnCollisionEnter(Collision collision)

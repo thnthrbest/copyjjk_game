@@ -8,12 +8,38 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
+
+[Serializable]
+public class FingerCurlData
+{
+    public float thumb = -1f;
+    public float index = -1f;
+    public float middle = -1f;
+    public float ring = -1f;
+    public float pinky = -1f;
+}
+
+[Serializable]
+public class MinigameHandPacket
+{
+    public FingerCurlData left;
+    public FingerCurlData right;
+}
+
 public class HandInputReceiver : MonoBehaviour
 {
     // ───── UDP (CONTROL) ─────
     UdpClient  udpClient;
     public int udpPort = 5006;
     IPEndPoint udpEndPoint;
+
+    // ───── Minigame UDP (Port 5052) ─────
+    private UdpClient  minigameUdpClient;
+    public int         minigameUdpPort = 5052;
+    private Thread     minigameUdpThread;
+    private readonly object minigameLock = new object();
+    private string     latestMinigameJson;
+    private bool       hasNewMinigameData = false;
 
     // ───── TCP (GESTURE) ─────
     public string tcpHost = "127.0.0.1";
@@ -39,6 +65,12 @@ public class HandInputReceiver : MonoBehaviour
     public static string RightHand   = "NONE";
     public static string Gesture     = "dont";
     public static string CurrentMode = "control";  // ← โหมดปัจจุบัน
+
+    // ───── Finger Curl Data ─────
+    public static FingerCurlData LeftHandCurl { get; private set; } = new FingerCurlData();
+    public static FingerCurlData RightHandCurl { get; private set; } = new FingerCurlData();
+    public static bool IsLeftHandDetected { get; private set; } = false;
+    public static bool IsRightHandDetected { get; private set; } = false;
 
     // ───── Queue สำหรับส่งข้อมูลมา Main Thread ─────
     private readonly Queue<string> tcpQueue  = new Queue<string>();
@@ -70,6 +102,35 @@ public class HandInputReceiver : MonoBehaviour
 
     void Update()
     {
+        // ─── [DEBUG] Keyboard Shortcuts สำหรับทดสอบสกิล (กด 0-4) ───
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        if (Input.GetKeyDown(KeyCode.Alpha0))
+        {
+            Debug.Log("[DEBUG KEY] 0 → ปิด Gesture Mode (closebullet)");
+            closebullet();
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            Debug.Log("[DEBUG KEY] 1 → rabbit skill (รอ bullet time จบก่อน)");
+            TriggerSkillAfterBulletTime("rabbit");
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            Debug.Log("[DEBUG KEY] 2 → dog skill (รอ bullet time จบก่อน)");
+            TriggerSkillAfterBulletTime("dog");
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            Debug.Log("[DEBUG KEY] 3 → cow skill (รอ bullet time จบก่อน)");
+            TriggerSkillAfterBulletTime("cow");
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            Debug.Log("[DEBUG KEY] 4 → เปิด Gesture Mode");
+            OnModeChanged("gesture");
+        }
+#endif
+
         // ─── ดึงข้อมูลจาก Queue มาใช้ใน Main Thread ───
         lock (queueLock)
         {
@@ -77,6 +138,45 @@ public class HandInputReceiver : MonoBehaviour
             {
                 string line = tcpQueue.Dequeue();
                 ProcessTCPLine(line);
+            }
+        }
+
+        // ─── ดึงข้อมูล Minigame UDP ───
+        string minigameJson = null;
+        lock (minigameLock)
+        {
+            if (hasNewMinigameData)
+            {
+                minigameJson = latestMinigameJson;
+                hasNewMinigameData = false;
+            }
+        }
+
+        if (minigameJson != null)
+        {
+            ProcessMinigameJson(minigameJson);
+        }
+        else if (minigameUdpClient == null)
+        {
+            // Fallback to HandDataReceiver
+            IsLeftHandDetected = HandDataReceiver.LeftHandDetected;
+            IsRightHandDetected = HandDataReceiver.RightHandDetected;
+            
+            if (IsLeftHandDetected && HandDataReceiver.LeftHand != null)
+            {
+                LeftHandCurl.thumb = HandDataReceiver.LeftHand.thumb;
+                LeftHandCurl.index = HandDataReceiver.LeftHand.index;
+                LeftHandCurl.middle = HandDataReceiver.LeftHand.middle;
+                LeftHandCurl.ring = HandDataReceiver.LeftHand.ring;
+                LeftHandCurl.pinky = HandDataReceiver.LeftHand.pinky;
+            }
+            if (IsRightHandDetected && HandDataReceiver.RightHand != null)
+            {
+                RightHandCurl.thumb = HandDataReceiver.RightHand.thumb;
+                RightHandCurl.index = HandDataReceiver.RightHand.index;
+                RightHandCurl.middle = HandDataReceiver.RightHand.middle;
+                RightHandCurl.ring = HandDataReceiver.RightHand.ring;
+                RightHandCurl.pinky = HandDataReceiver.RightHand.pinky;
             }
         }
     }
@@ -233,7 +333,7 @@ public class HandInputReceiver : MonoBehaviour
             case "2":
                 Gesture = value;
                 Debug.Log($"[TCP] Gesture = {value}");
-                OnGestureDetected(value);
+                TriggerSkillAfterBulletTime(value);
                 break;
 
             default:
@@ -297,38 +397,218 @@ public class HandInputReceiver : MonoBehaviour
         // มือหายหรือไม่แน่ใจ
     }
 
-    public void OnGestureDetected(string gesture)
+    // ─── เรียกตัวนี้แทน OnGestureDetected โดยตรง ───
+    // จะเปิด gesture mode → รอ bullet time ปิดจนสนิท → ค่อยยิงสกิล
+    public void TriggerSkillAfterBulletTime(string gesture)
+    {
+        OnModeChanged("gesture");         // เปิด bullet time + UI skill
+        StartCoroutine(WaitAndFireSkill(gesture));
+    }
+
+    private System.Collections.IEnumerator WaitAndFireSkill(string gesture)
+    {
+        // ─── รอจนกว่า bullet time จะปิดและ timeScale กลับใกล้ปกติ ───
+        // ปิด bullet time ก่อน
+        closebullet();
+
+        // รอให้ timeScale >= 0.95 (Lerp อาจใช้เวลา 2-3 frame)
+        float timeout = 3f;   // timeout กันค้าง (วินาที unscaled)
+        float elapsed = 0f;
+        while (!BulletTime.Instance.IsTimeScaleNormal())
+        {
+            elapsed += Time.unscaledDeltaTime;
+            if (elapsed >= timeout)
+            {
+                Debug.LogWarning("[Skill] Timeout รอ bullet time — fire skill ทันที");
+                break;
+            }
+            yield return null;
+        }
+
+        Debug.Log($"[Skill] bullet time จบแล้ว → ยิงสกิล: {gesture}");
+        FireSkill(gesture);
+    }
+
+    // ─── Logic จริงของการเรียกสกิล (เดิมคือ OnGestureDetected) ───
+    public void OnGestureDetected(string gesture) => TriggerSkillAfterBulletTime(gesture);
+
+    private void FireSkill(string gesture)
     {
         var img = skill.GetComponent<Image>();
-         switch (gesture)
+        switch (gesture)
         {
             case "rabbit":
-                {
-
-                    img.sprite = animalSprite[0];
-                    player.GetComponent<rabbitskill>().StartSkill();
-                }
-                
-            break;
-            case "dog": 
-                {
-                    img.sprite = animalSprite[1];
-                    player.GetComponent<dogskill>().StartSkill();
-                }
-            break;
+                img.sprite = animalSprite[0];
+                player.GetComponent<rabbitskill>().StartSkill();
+                break;
+            case "dog":
+                img.sprite = animalSprite[1];
+                player.GetComponent<dogskill>().StartSkill();
+                break;
             case "cow":
+                if (animalSprite != null && animalSprite.Length > 2)
+                    img.sprite = animalSprite[2];
+                var cowSkillComponent = player.GetComponent<cowskill>();
+                if (cowSkillComponent != null)
+                    cowSkillComponent.StartSkill();
+                break;
+        }
+    }
+
+    // =========================
+    // MINIGAME CONTROL & UDP
+    // =========================
+    public void StartMinigame()
+    {
+        SendTCP("startminigame\n");
+        StartMinigameUDP();
+    }
+
+    public void StopMinigame()
+    {
+        SendTCP("stopminigame\n");
+        StopMinigameUDP();
+    }
+
+    private void SendTCP(string msg)
+    {
+        try
+        {
+            if (tcpClient != null && tcpClient.Connected && stream != null)
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(msg);
+                stream.Write(bytes, 0, bytes.Length);
+                stream.Flush();
+            }
+            Debug.Log("[TCP] Sent: " + msg);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("[TCP] Error sending message: " + e.Message);
+        }
+    }
+
+    private void StartMinigameUDP()
+    {
+        lock (minigameLock)
+        {
+            if (minigameUdpThread != null && minigameUdpThread.IsAlive) return;
+
+            try
+            {
+                minigameUdpClient = new UdpClient();
+                minigameUdpClient.Client.SetSocketOption(
+                    SocketOptionLevel.Socket,
+                    SocketOptionName.ReuseAddress, true
+                );
+                minigameUdpClient.Client.Bind(new IPEndPoint(IPAddress.Any, minigameUdpPort));
+                
+                minigameUdpThread = new Thread(ReceiveMinigameUDPLoop);
+                minigameUdpThread.IsBackground = true;
+                minigameUdpThread.Start();
+                Debug.Log($"[Minigame UDP] Started on port {minigameUdpPort}");
+            }
+            catch (SocketException se)
+            {
+                if (minigameUdpClient != null)
                 {
-                    if (animalSprite != null && animalSprite.Length > 2)
-                    {
-                        img.sprite = animalSprite[2];
-                    }
-                    var cowSkillComponent = player.GetComponent<cowskill>();
-                    if (cowSkillComponent != null)
-                    {
-                        cowSkillComponent.StartSkill();
-                    }
+                    minigameUdpClient.Close();
+                    minigameUdpClient = null;
                 }
-            break;
+                Debug.LogWarning($"[Minigame UDP] Port {minigameUdpPort} already in use or access forbidden. Falling back to HandDataReceiver. Details: {se.Message}");
+            }
+            catch (Exception e)
+            {
+                if (minigameUdpClient != null)
+                {
+                    minigameUdpClient.Close();
+                    minigameUdpClient = null;
+                }
+                Debug.LogError($"[Minigame UDP] Failed to start: {e.Message}");
+            }
+        }
+    }
+
+    public void StopMinigameUDP()
+    {
+        lock (minigameLock)
+        {
+            try
+            {
+                if (minigameUdpClient != null)
+                {
+                    minigameUdpClient.Close();
+                    minigameUdpClient = null;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Minigame UDP] Error closing: {e.Message}");
+            }
+
+            if (minigameUdpThread != null && minigameUdpThread.IsAlive)
+            {
+                minigameUdpThread.Join(200);
+                minigameUdpThread = null;
+            }
+            Debug.Log("[Minigame UDP] Stopped");
+        }
+    }
+
+    private void ReceiveMinigameUDPLoop()
+    {
+        IPEndPoint anyIP = new IPEndPoint(IPAddress.Any, 0);
+        while (isRunning && minigameUdpClient != null)
+        {
+            try
+            {
+                byte[] data = minigameUdpClient.Receive(ref anyIP);
+                string json = Encoding.UTF8.GetString(data);
+                lock (minigameLock)
+                {
+                    latestMinigameJson = json;
+                    hasNewMinigameData = true;
+                }
+            }
+            catch (SocketException)
+            {
+                // Normal shutdown when closed
+                break;
+            }
+            catch (Exception e)
+            {
+                if (isRunning)
+                {
+                    Debug.LogWarning($"[Minigame UDP] Receive error: {e.Message}");
+                }
+            }
+        }
+    }
+
+    private void ProcessMinigameJson(string json)
+    {
+        // JsonUtility doesn't handle "null" fields nicely, so we replace them with sentinel values (e.g., -1 for all curls)
+        json = json.Replace("null", "{\"thumb\":-1,\"index\":-1,\"middle\":-1,\"ring\":-1,\"pinky\":-1}");
+
+        try
+        {
+            MinigameHandPacket packet = JsonUtility.FromJson<MinigameHandPacket>(json);
+            
+            IsLeftHandDetected = packet.left != null && packet.left.index >= 0f;
+            IsRightHandDetected = packet.right != null && packet.right.index >= 0f;
+
+            if (IsLeftHandDetected)
+            {
+                LeftHandCurl = packet.left;
+            }
+            if (IsRightHandDetected)
+            {
+                RightHandCurl = packet.right;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[Minigame UDP] JSON parse error: {e.Message}\n{json}");
         }
     }
 
@@ -338,6 +618,7 @@ public class HandInputReceiver : MonoBehaviour
     void OnApplicationQuit()
     {
         isRunning = false;
+        StopMinigameUDP();
         try
         {
             udpClient?.Close();
