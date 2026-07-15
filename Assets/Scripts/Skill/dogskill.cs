@@ -34,6 +34,14 @@ public class dogskill : MonoBehaviour
     // =========================
     public void StartSkill()
     {
+        // Check if skill is unlocked
+        SkillManager sm = GetComponent<SkillManager>();
+        if (sm != null && !sm.IsSkillUnlocked("dog"))
+        {
+            Debug.LogWarning("[DogSkill] สกิลสุนัขยังไม่ได้ปลดล็อค! ไม่สามารถใช้งานได้");
+            return;
+        }
+
         PlayerHealth playerHealth = GetComponent<PlayerHealth>();
         if (playerHealth != null)
         {

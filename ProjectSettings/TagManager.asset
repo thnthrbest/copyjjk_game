@@ -9,6 +9,7 @@ TagManager:
   - Bullet
   - BulletDestroyer
   - dog
+  - Obstacle
   layers:
   - Default
   - TransparentFX
@@ -22,8 +23,8 @@ TagManager:
   - Magic
   - Camera
   - PP
-  - Silhouette
-  - Minigame
+  - Wall
+  - 
   - 
   - 
   - 

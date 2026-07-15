@@ -23,6 +23,7 @@ public class PlayerHealth : MonoBehaviour
 
     public bool godMode = false;              // โหมดเทพ (ไม่ตาย)
     private bool  isInvincible   = false;
+    public bool IsInvincible => isInvincible;
 
     private bool isDead = false;
 
@@ -66,6 +67,31 @@ public class PlayerHealth : MonoBehaviour
         isInvincible   = true;
         invincibleTimer = 0f;
 
+        UpdateUI();
+
+        // Trigger flash effect for non-obstacle damage sources (bullets, enemies, etc.)
+        if (source != "Obstacle")
+        {
+            PlayerController pc = GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                pc.TriggerFlashOnly();
+            }
+        }
+
+        if (currentHealth <= 0)
+            Die();
+    }
+
+    // ─────────────────────────────
+    //  รับดาเมจแบบ DOT (ไฟเผา, พิษ)
+    //  ไม่มี Invincibility Frame เพื่อให้ tick ได้ต่อเนื่อง
+    // ─────────────────────────────
+    public void TakeDamageOverTime(float damage)
+    {
+        if (isDead || godMode) return;
+
+        currentHealth = Mathf.Max(0, currentHealth - damage);
         UpdateUI();
 
         if (currentHealth <= 0)

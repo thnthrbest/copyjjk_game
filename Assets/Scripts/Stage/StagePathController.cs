@@ -7,6 +7,8 @@ public class StagePoint
 {
     public Transform stopPoint;
     public GameObject enemyZone;
+    [Tooltip("กลุ่มวัตถุ/ฉากของโซนนี้ที่จะใช้ซ่อน/แสดงตามตำแหน่งการเดินทาง")]
+    public GameObject stageContent;
 }
 
 public class StagePathController : MonoBehaviour
@@ -121,6 +123,16 @@ public class StagePathController : MonoBehaviour
 
     void GoNextPoint()
     {
+        // ปิดห้องที่ผ่านมา
+        if (currentIndex > 0 && currentIndex < stagePoints.Count)
+        {
+            var prevPoint = stagePoints[currentIndex-1];
+            if (prevPoint != null && prevPoint.stageContent != null)
+            {
+                prevPoint.stageContent.SetActive(false);
+            }
+        }
+
         currentIndex++;
 
         if (currentIndex >= stagePoints.Count)

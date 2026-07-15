@@ -22,6 +22,8 @@ public class HandInputReceiver : MonoBehaviour
     NetworkStream stream;
     Thread        tcpThread;
 
+    public bool IsConnected { get; private set; } = false;
+
     public GameObject player;
     public GameObject skill;
     public Sprite[] animalSprite;
@@ -151,6 +153,7 @@ public class HandInputReceiver : MonoBehaviour
                 tcpClient = new TcpClient();
                 tcpClient.Connect(tcpHost, tcpPort);
                 stream = tcpClient.GetStream();
+                IsConnected = true;
                 Debug.Log("[TCP] Connected!");
 
                 byte[]        buffer  = new byte[1024];
@@ -187,10 +190,12 @@ public class HandInputReceiver : MonoBehaviour
                 }
 
                 tcpClient.Close();
+                IsConnected = false;
                 Debug.Log("[TCP] Disconnected");
             }
             catch (Exception e)
             {
+                IsConnected = false;
                 if (isRunning)
                 {
                     Debug.LogWarning("[TCP] Retry in 1s... " + e.Message);
@@ -305,10 +310,23 @@ public class HandInputReceiver : MonoBehaviour
                 }
                 
             break;
-            case "bird": 
+            case "dog": 
                 {
                     img.sprite = animalSprite[1];
                     player.GetComponent<dogskill>().StartSkill();
+                }
+            break;
+            case "cow":
+                {
+                    if (animalSprite != null && animalSprite.Length > 2)
+                    {
+                        img.sprite = animalSprite[2];
+                    }
+                    var cowSkillComponent = player.GetComponent<cowskill>();
+                    if (cowSkillComponent != null)
+                    {
+                        cowSkillComponent.StartSkill();
+                    }
                 }
             break;
         }
