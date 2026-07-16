@@ -24,10 +24,7 @@ public class BeatmapPlayer : MonoBehaviour
 
     void Start()
     {
-        if (beatmap != null)
-            Play(beatmap);
-        else
-            Debug.LogWarning("[BeatmapPlayer] ยังไม่ได้ใส่ beatmap ใน Inspector");
+
     }
 
     public void Play(BeatmapSO map)
