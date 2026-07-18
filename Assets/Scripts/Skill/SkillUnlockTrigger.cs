@@ -47,7 +47,14 @@ public class SkillUnlockTrigger : MonoBehaviour
             // 4. เล่นเสียง (หากมีการใส่ไว้ใน Inspector)
             if (collectSound != null)
             {
-                AudioSource.PlayClipAtPoint(collectSound, transform.position, soundVolume);
+                if (SoundManager.Instance != null)
+                {
+                    SoundManager.Instance.PlaySFX(collectSound);
+                }
+                else
+                {
+                    AudioSource.PlayClipAtPoint(collectSound, transform.position, soundVolume);
+                }
             }
 
             // 5. ทำลายไอเทมชิ้นนี้ออกจากฉาก

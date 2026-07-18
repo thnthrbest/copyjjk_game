@@ -19,7 +19,22 @@ public class MainMenuController : MonoBehaviour
     [Tooltip("TextMeshPro text for volume percentage representation")]
     public TextMeshProUGUI volumeText;
 
+    [Header("Separate Volume Settings UI")]
+    [Tooltip("Slider for BGM volume control")]
+    public Slider bgmSlider;
+
+    [Tooltip("TextMeshPro text for BGM volume representation")]
+    public TextMeshProUGUI bgmText;
+
+    [Tooltip("Slider for SFX volume control")]
+    public Slider sfxSlider;
+
+    [Tooltip("TextMeshPro text for SFX volume representation")]
+    public TextMeshProUGUI sfxText;
+
     private const string VolumePrefKey = "GameVolume";
+    private const string BGMVolumePrefKey = "BGMVolume";
+    private const string SFXVolumePrefKey = "SFXVolume";
     private const string MutePrefKey = "GameMute";
 
     private void Start()
@@ -41,6 +56,14 @@ public class MainMenuController : MonoBehaviour
         if (muteToggle != null)
         {
             muteToggle.onValueChanged.AddListener(SetMute);
+        }
+        if (bgmSlider != null)
+        {
+            bgmSlider.onValueChanged.AddListener(SetBGMVolume);
+        }
+        if (sfxSlider != null)
+        {
+            sfxSlider.onValueChanged.AddListener(SetSFXVolume);
         }
     }
 
@@ -115,6 +138,48 @@ public class MainMenuController : MonoBehaviour
     }
 
     /// <summary>
+    /// Adjusts BGM volume separately
+    /// </summary>
+    public void SetBGMVolume(float volume)
+    {
+        volume = Mathf.Clamp01(volume);
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.BGMVolume = volume;
+        }
+        UpdateBGMVolumeText(volume);
+    }
+
+    /// <summary>
+    /// Adjusts SFX volume separately
+    /// </summary>
+    public void SetSFXVolume(float volume)
+    {
+        volume = Mathf.Clamp01(volume);
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.SFXVolume = volume;
+        }
+        UpdateSFXVolumeText(volume);
+    }
+
+    private void UpdateBGMVolumeText(float volume)
+    {
+        if (bgmText != null)
+        {
+            bgmText.text = Mathf.RoundToInt(volume * 100f) + "%";
+        }
+    }
+
+    private void UpdateSFXVolumeText(float volume)
+    {
+        if (sfxText != null)
+        {
+            sfxText.text = Mathf.RoundToInt(volume * 100f) + "%";
+        }
+    }
+
+    /// <summary>
     /// Toggles mute status of the game
     /// </summary>
     /// <param name="isMuted"></param>
@@ -167,6 +232,22 @@ public class MainMenuController : MonoBehaviour
         }
 
         UpdateVolumeText(savedVolume);
+
+        // Load separate BGM & SFX volumes
+        float savedBGMVolume = PlayerPrefs.GetFloat(BGMVolumePrefKey, 1f);
+        float savedSFXVolume = PlayerPrefs.GetFloat(SFXVolumePrefKey, 1f);
+
+        if (bgmSlider != null)
+        {
+            bgmSlider.value = savedBGMVolume;
+        }
+        if (sfxSlider != null)
+        {
+            sfxSlider.value = savedSFXVolume;
+        }
+
+        UpdateBGMVolumeText(savedBGMVolume);
+        UpdateSFXVolumeText(savedSFXVolume);
     }
 
     /// <summary>

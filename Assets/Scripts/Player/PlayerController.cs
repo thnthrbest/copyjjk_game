@@ -155,11 +155,8 @@ public class PlayerController : MonoBehaviour
             lastJumpTime = Time.time;
 
             animator.SetTrigger("jump");
-
-            if (jumpSound != null && SoundManager.Instance != null)
-            {
-                SoundManager.Instance.PlaySFXAtPoint(jumpSound, transform.position);
-            }
+            SoundManager.Instance.PlaySFXAtPoint(jumpSound, transform.position);
+        
         }
 
         verticalVelocity += gravity * Time.deltaTime;
