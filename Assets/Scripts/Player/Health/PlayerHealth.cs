@@ -29,8 +29,17 @@ public class PlayerHealth : MonoBehaviour
 
     public float activeDuration  = 0f;
 
+    [Header("Sound Settings")]
+    public AudioClip hitSound;
+    public AudioClip healSound;
+    public AudioClip dieSound;
 
+    public static PlayerHealth Instance { get; private set; }
 
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
@@ -80,7 +89,16 @@ public class PlayerHealth : MonoBehaviour
         }
 
         if (currentHealth <= 0)
+        {
             Die();
+        }
+        else
+        {
+            if (hitSound != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFXAtPoint(hitSound, transform.position);
+            }
+        }
     }
 
     // ─────────────────────────────
@@ -105,6 +123,11 @@ public class PlayerHealth : MonoBehaviour
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
         Debug.Log($"[HP] ฟื้น {amount} | เหลือ {currentHealth}/{maxHealth}");
         UpdateUI();
+
+        if (healSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFXAtPoint(healSound, transform.position);
+        }
     }
 
     void UpdateUI()
@@ -131,6 +154,11 @@ public class PlayerHealth : MonoBehaviour
         if (isDead) return;
         isDead = true;
         Debug.Log("[HP] Player ตายแล้ว!");
+
+        if (dieSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFXAtPoint(dieSound, transform.position);
+        }
 
         // ─── เพิ่ม Logic ตาย ───
         // GetComponent<Animator>()?.SetTrigger("Die");

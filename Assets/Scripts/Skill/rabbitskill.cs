@@ -8,6 +8,7 @@ public class rabbitskill : MonoBehaviour
     public GameObject shieldPrefab;
     public float      shieldRadius   = 5f;
     public LayerMask  bulletLayer;
+    public AudioClip summonSound;        // Summon sound effect
 
     [Header("Auto Settings")]
     public float activeDuration  = 20f;
@@ -55,6 +56,12 @@ public class rabbitskill : MonoBehaviour
         isActive    = true;
         activeTimer = 0f;
         blockedBullets.Clear();
+
+        if (summonSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFXAtPoint(summonSound, transform.position);
+        }
+
         playerHealth.activeDuration = activeDuration; // บอก PlayerHealth ว่า skill กำลังทำงาน
         InvokeRepeating(nameof(TryBlockBullet), 0.2f, checkInterval);
         Debug.Log($"[Shield] Skill เปิดแล้ว! ทำงาน {activeDuration} วิ");

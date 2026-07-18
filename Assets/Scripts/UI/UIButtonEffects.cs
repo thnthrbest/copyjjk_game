@@ -32,6 +32,13 @@ public class UIButtonEffects : MonoBehaviour, IPointerEnterHandler, IPointerExit
     [Tooltip("Text color when hovered")]
     public Color hoverTextColor = Color.black;
 
+    [Header("Sound Settings")]
+    [Tooltip("Sound clip played when the button is hovered")]
+    public AudioClip hoverSound;
+
+    [Tooltip("Sound clip played when the button is clicked")]
+    public AudioClip clickSound;
+
     // Cached original colors
     private Color originalTextColor;
     private Color originalTMPTextColor;
@@ -78,6 +85,11 @@ public class UIButtonEffects : MonoBehaviour, IPointerEnterHandler, IPointerExit
         {
             StartScaleTransition(originalScale * hoverScaleMultiplier);
             StartColorTransition(hover: true);
+
+            if (hoverSound != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFX(hoverSound);
+            }
         }
     }
 
@@ -95,6 +107,11 @@ public class UIButtonEffects : MonoBehaviour, IPointerEnterHandler, IPointerExit
         if (button != null && button.interactable)
         {
             StartScaleTransition(originalScale * clickScaleMultiplier);
+
+            if (clickSound != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFX(clickSound);
+            }
         }
     }
 

@@ -5,6 +5,9 @@ public class dogobj : MonoBehaviour
     [Header("Detection")]
     public float detectionRange = 15f;
 
+    [Header("Sound Settings")]
+    public AudioClip biteSound;
+
     [Header("Target Type")]
     public bool targetGroundEnemy = true;   // โจมตีศัตรูพื้น
     public bool targetAirEnemy = false;     // โจมตีศัตรูฟ้า
@@ -169,6 +172,11 @@ public class dogobj : MonoBehaviour
     {
         if (other.CompareTag("Enemy"))
         {
+            if (biteSound != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFXAtPoint(biteSound, transform.position);
+            }
+
             Destroy(other.gameObject); // ทำลายศัตรูที่ชน (ถ้าต้องการ)
             Destroy(gameObject);
         }

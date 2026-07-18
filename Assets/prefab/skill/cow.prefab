@@ -3163,7 +3163,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -196.5, y: 36.7, z: 178}
-  m_LocalScale: {x: 0.21, y: 0.21, z: 0.21}
+  m_LocalScale: {x: 0.49999997, y: 0.49999997, z: 0.49999997}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6296796564459525890}
@@ -3182,8 +3182,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d935fb4fc4f4f444a44236527d22487, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 200
+  speed: 100
   lifetime: 5
+  crashSound: {fileID: 8300000, guid: 6cc51dd19b3446a448e9150d7a3baa8d, type: 3}
 --- !u!65 &8672423904390162452
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3476,7 +3477,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6eecfccc75f79464194abf3402c4884e, type: 2}
+  - {fileID: 2100000, guid: 63cc74eca8b8b704b8b0150d8c3db380, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

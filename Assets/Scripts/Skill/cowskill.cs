@@ -6,6 +6,7 @@ public class cowskill : MonoBehaviour
     public GameObject cowPrefab;            // Prefab of the Cow (must have cowobj script)
     public float castProtectDuration = 1.0f; // Brief invincibility to protect player while casting
     public float forwardOffset = 2.0f;       // Distance in front of player to spawn the cow
+    public AudioClip summonSound;            // Summon sound effect
 
     [Header("Cooldown")]
     public float cooldown = 10f;             // Skill cooldown
@@ -61,6 +62,11 @@ public class cowskill : MonoBehaviour
         }
 
         // 2. สร้างวัวพุ่งไปข้างหน้า (Cowobj will handle its own movement & destruction)
+        if (summonSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFXAtPoint(summonSound, transform.position);
+        }
+
         Vector3 spawnPos = transform.position + (transform.forward * forwardOffset);
         Quaternion spawnRot = Quaternion.LookRotation(transform.forward);
         GameObject spawnedCow = Instantiate(cowPrefab, spawnPos, spawnRot);

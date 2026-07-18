@@ -6,6 +6,9 @@ public class cowobj : MonoBehaviour
     public float speed = 25f;       // Rushing speed of the cow
     public float lifetime = 5f;     // Cow object lifetime (5 seconds before disappearing)
 
+    [Header("Sound Settings")]
+    public AudioClip crashSound;
+
     private Transform playerTransform;
 
     void Start()
@@ -33,6 +36,12 @@ public class cowobj : MonoBehaviour
         if (other.CompareTag("Obstacle"))
         {
             Debug.Log($"[CowObj] พุ่งชนทำลายสิ่งกีดขวาง: {other.gameObject.name}");
+
+            if (crashSound != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFXAtPoint(crashSound, transform.position);
+            }
+
             Destroy(other.gameObject);
         }
     }

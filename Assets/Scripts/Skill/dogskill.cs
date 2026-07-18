@@ -10,6 +10,7 @@ public class dogskill : MonoBehaviour
     public float sideDistance = 3f;      // ระยะซ้าย/ขวาจาก Player
     public float forwardDistance = 2f;   // ระยะด้านหน้าจาก Player
     public float activeDuration = 5f;    // เวลาที่หมาอยู่ในฉาก
+    public AudioClip summonSound;        // Summon sound effect
 
     [Header("Cooldown")]
     public float cooldown = 10f;         // คูลดาวน์สกิล
@@ -53,6 +54,12 @@ public class dogskill : MonoBehaviour
             Debug.LogWarning("[DogSkill] ยังไม่ได้ใส่ dogPrefab");
             return;
         }
+
+        if (summonSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFXAtPoint(summonSound, transform.position);
+        }
+
         playerHealth.activeDuration = activeDuration;
         Transform point = spawnPoint != null ? spawnPoint : transform;
 

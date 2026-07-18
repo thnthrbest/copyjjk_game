@@ -8,6 +8,9 @@ public class rabbitobj : MonoBehaviour
 
     public float selfDestroyTime = 3f;
 
+    [Header("Sound Settings")]
+    public AudioClip blockSound;
+
     [Header("Rise Settings")]
     public float startOffsetY  = -1.5f;
     public float targetOffsetY =  0.5f;
@@ -56,6 +59,12 @@ public class rabbitobj : MonoBehaviour
         if (other.CompareTag("Bullet"))
         {
             Debug.Log("[Shield] รับกระสุน — ทำลายทั้งคู่!");
+
+            if (blockSound != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFXAtPoint(blockSound, transform.position);
+            }
+
             Destroy(other.gameObject);
             DestroySelf();
         }

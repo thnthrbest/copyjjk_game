@@ -10,6 +10,10 @@ public class BulletTime : MonoBehaviour
     public float enterSpeed = 5f;
     public float exitSpeed  = 8f;
 
+    [Header("Sound Settings")]
+    public AudioClip bulletTimeEnterSound;
+    public AudioClip bulletTimeExitSound;
+
     private bool  isActive       = false;
     private float targetTimeScale = 1f;
 
@@ -50,6 +54,11 @@ public class BulletTime : MonoBehaviour
         isActive        = true;
         targetTimeScale = slowMotionScale;
         Debug.Log("[BulletTime] เข้า Slow Motion");
+
+        if (bulletTimeEnterSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(bulletTimeEnterSound);
+        }
     }
 
     public void Exit()
@@ -57,6 +66,11 @@ public class BulletTime : MonoBehaviour
         isActive        = false;
         targetTimeScale = normalTimeScale;
         Debug.Log("[BulletTime] ออกจาก Slow Motion");
+
+        if (bulletTimeExitSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(bulletTimeExitSound);
+        }
     }
 
     void OnDestroy()

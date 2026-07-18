@@ -455,6 +455,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   detectionRange: 600
+  biteSound: {fileID: 8300000, guid: c763d32de33ae934c8d5be7f642c0367, type: 3}
   targetGroundEnemy: 0
   targetAirEnemy: 1
   enemyTag: Enemy

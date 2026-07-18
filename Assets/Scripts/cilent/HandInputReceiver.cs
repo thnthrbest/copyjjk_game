@@ -126,8 +126,8 @@ public class HandInputReceiver : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.Alpha4))
         {
-            Debug.Log("[DEBUG KEY] 4 → เปิด Gesture Mode");
-            OnModeChanged("gesture");
+            Debug.Log("[DEBUG KEY] 4 → deer skill (รอ bullet time จบก่อน)");
+            TriggerSkillAfterBulletTime("deer");
         }
 #endif
 
@@ -397,35 +397,50 @@ public class HandInputReceiver : MonoBehaviour
         // มือหายหรือไม่แน่ใจ
     }
 
-    // ─── เรียกตัวนี้แทน OnGestureDetected โดยตรง ───
-    // จะเปิด gesture mode → รอ bullet time ปิดจนสนิท → ค่อยยิงสกิล
+    // ─── เรียกตัวนี้แทน OnGestureDetected ───
+    // Flow: เปิด bullet time → รอ bulletTimeDuration → ปิด bullet time → รอ timeScale ปกติ → ยิงสกิล
+    [Header("Skill Trigger Settings")]
+    public float bulletTimeDuration = 3f;  // รอใน bullet time กี่วินาที (unscaled)
+
     public void TriggerSkillAfterBulletTime(string gesture)
     {
-        OnModeChanged("gesture");         // เปิด bullet time + UI skill
-        StartCoroutine(WaitAndFireSkill(gesture));
+        StartCoroutine(SkillSequence(gesture));
     }
 
-    private System.Collections.IEnumerator WaitAndFireSkill(string gesture)
+    private System.Collections.IEnumerator SkillSequence(string gesture)
     {
-        // ─── รอจนกว่า bullet time จะปิดและ timeScale กลับใกล้ปกติ ───
-        // ปิด bullet time ก่อน
-        closebullet();
+        // 1) เปิด Bullet Time + UI Skill
+        OnModeChanged("gesture");
+        Debug.Log($"[Skill] เข้า bullet time → สกิล: {gesture}");
 
-        // รอให้ timeScale >= 0.95 (Lerp อาจใช้เวลา 2-3 frame)
-        float timeout = 3f;   // timeout กันค้าง (วินาที unscaled)
+        // 2) รอใน bullet time bulletTimeDuration วินาที (ใช้ unscaledDeltaTime เพราะ timeScale สลอว)
         float elapsed = 0f;
-        while (!BulletTime.Instance.IsTimeScaleNormal())
+        while (elapsed < bulletTimeDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            if (elapsed >= timeout)
+            yield return null;
+        }
+        Debug.Log($"[Skill] bullet time {bulletTimeDuration}วิ จบ → ปิด slow motion");
+
+        // 3) ปิด Bullet Time
+        closebullet();
+
+        // 4) รอให้ timeScale กลับใกล้ปกติ (>= 0.95)
+        float waitTimeout = 3f;
+        float waitElapsed = 0f;
+        while (!BulletTime.Instance.IsTimeScaleNormal())
+        {
+            waitElapsed += Time.unscaledDeltaTime;
+            if (waitElapsed >= waitTimeout)
             {
-                Debug.LogWarning("[Skill] Timeout รอ bullet time — fire skill ทันที");
+                Debug.LogWarning("[Skill] Timeout รอสรุป time scale — ยิงสกิลทันที");
                 break;
             }
             yield return null;
         }
 
-        Debug.Log($"[Skill] bullet time จบแล้ว → ยิงสกิล: {gesture}");
+        // 5) ยิงสกิล
+        Debug.Log($"[Skill] timeScale ปกติแล้ว → FireSkill: {gesture}");
         FireSkill(gesture);
     }
 
@@ -448,9 +463,17 @@ public class HandInputReceiver : MonoBehaviour
             case "cow":
                 if (animalSprite != null && animalSprite.Length > 2)
                     img.sprite = animalSprite[2];
-                var cowSkillComponent = player.GetComponent<cowskill>();
-                if (cowSkillComponent != null)
-                    cowSkillComponent.StartSkill();
+                var cowComp = player.GetComponent<cowskill>();
+                if (cowComp != null) cowComp.StartSkill();
+                break;
+            case "deer":
+                if (animalSprite != null && animalSprite.Length > 3)
+                    img.sprite = animalSprite[3];
+                Debug.LogWarning("[Skill] deer skill: ยังไม่มี component deerskิll — เพิ่ม script ได้ภายหลัง");
+                // TODO: เพิ่มเมื่อมี deerskิll.cs แล้ว: player.GetComponent<deerskิll>().StartSkill();
+                break;
+            default:
+                Debug.LogWarning($"[Skill] ไม่รู้จักสกิล: {gesture}");
                 break;
         }
     }

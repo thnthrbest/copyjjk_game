@@ -199,6 +199,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetBullet: {fileID: 0}
   selfDestroyTime: 3
+  blockSound: {fileID: 8300000, guid: 3254e0a5babd0ac49b7f3a0f49d3755c, type: 3}
   startOffsetY: -8
   targetOffsetY: 9
   riseSpeed: 50

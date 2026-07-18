@@ -16,6 +16,12 @@ public class PlayerController : MonoBehaviour
     public float crouchHeight = 1f;
 
     public float jumpCooldown = 0.3f;
+
+    [Header("Audio Settings")]
+    public AudioClip jumpSound;
+    public AudioClip runSound;
+    private AudioSource runAudioSource;
+
     public StagePathController stagePathController;
 
     [Header("Obstacle Collision Settings")]
@@ -54,6 +60,12 @@ public class PlayerController : MonoBehaviour
         controller = GetComponent<CharacterController>();
         originalHeight = controller.height;
         animator = GetComponent<Animator>();
+
+        runAudioSource = gameObject.AddComponent<AudioSource>();
+        runAudioSource.clip = runSound;
+        runAudioSource.loop = true;
+        runAudioSource.playOnAwake = false;
+        runAudioSource.spatialBlend = 0f; // 2D run sound
 
         if (autoRotateDirectionalLight)
         {
@@ -143,6 +155,11 @@ public class PlayerController : MonoBehaviour
             lastJumpTime = Time.time;
 
             animator.SetTrigger("jump");
+
+            if (jumpSound != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFXAtPoint(jumpSound, transform.position);
+            }
         }
 
         verticalVelocity += gravity * Time.deltaTime;
@@ -160,6 +177,39 @@ public class PlayerController : MonoBehaviour
         pos.x = Mathf.Clamp(pos.x, minX, maxX);
         pos.z = 0f; // ล็อคแกน Z
         transform.localPosition = pos;
+
+        // Update running sound
+        if (runAudioSource != null)
+        {
+            if (runAudioSource.clip != runSound)
+            {
+                runAudioSource.clip = runSound;
+            }
+
+            bool isMoving = stagePathController != null ? stagePathController.moving : true;
+            PlayerHealth hp = GetComponent<PlayerHealth>();
+            bool isDead = hp != null && hp.IsDead();
+            bool shouldPlayRun = controller.isGrounded && isMoving && !isDead;
+
+            if (shouldPlayRun)
+            {
+                if (runSound != null)
+                {
+                    if (!runAudioSource.isPlaying)
+                    {
+                        runAudioSource.Play();
+                    }
+                    runAudioSource.pitch = Time.timeScale;
+                }
+            }
+            else
+            {
+                if (runAudioSource.isPlaying)
+                {
+                    runAudioSource.Stop();
+                }
+            }
+        }
     }
 
     void OnTriggerEnter(Collider other)

@@ -10,6 +10,7 @@ public class EnergyPickup : MonoBehaviour
         {
 
             PlayerEnergy.Instance?.AddEnergy(energyAmount, "Pickup");
+            PlayerHealth.Instance?.Heal(10);
             Destroy(gameObject);
         }
 
