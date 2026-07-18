@@ -151,19 +151,19 @@ public class SoundManager : MonoBehaviour
         }
     }
 
-    public void PlaySFX(AudioClip clip)
+    public void PlaySFX(AudioClip clip, float volumeScale = 1f)
     {
         if (clip == null) return;
-        PlayClip(clip, Vector3.zero, false);
+        PlayClip(clip, Vector3.zero, false, volumeScale);
     }
 
-    public void PlaySFXAtPoint(AudioClip clip, Vector3 position)
+    public void PlaySFXAtPoint(AudioClip clip, Vector3 position, float volumeScale = 1f)
     {
         if (clip == null) return;
-        PlayClip(clip, position, false);
+        PlayClip(clip, position, false, volumeScale);
     }
 
-    private void PlayClip(AudioClip clip, Vector3 position, bool is3D)
+    private void PlayClip(AudioClip clip, Vector3 position, bool is3D, float volumeScale = 1f)
     {
         GameObject go = new GameObject("TempSFX_" + clip.name);
         if (is3D)
@@ -176,7 +176,7 @@ public class SoundManager : MonoBehaviour
         source.spatialBlend = is3D ? 1f : 0f;
         source.playOnAwake = false;
         
-        source.volume = sfxVolume;
+        source.volume = sfxVolume * volumeScale;
         source.Play();
 
         Destroy(go, clip.length);

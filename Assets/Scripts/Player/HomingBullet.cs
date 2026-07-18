@@ -12,6 +12,17 @@ public class HomingBullet : MonoBehaviour
     [Header("Lifetime")]
     public float lifeTime = 5f;
 
+    [Header("Audio Settings")]
+    [Tooltip("เสียงเมื่อยิงกระสุนออกไป")]
+    public AudioClip shootSound;
+    [Range(0f, 1f)]
+    public float shootVolume = 0.8f;
+
+    [Tooltip("เสียงเมื่อปะทะศัตรู")]
+    public AudioClip hitSound;
+    [Range(0f, 1f)]
+    public float hitVolume = 0.8f;
+
     Rigidbody rb;
     ParticleSystem ps;
 
@@ -29,6 +40,12 @@ public class HomingBullet : MonoBehaviour
             var main = ps.main;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             ps.Play();
+        }
+
+        // เล่นเสียงยิงกระสุน
+        if (shootSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(shootSound, shootVolume);
         }
 
         Destroy(gameObject, lifeTime);
@@ -67,6 +84,12 @@ public class HomingBullet : MonoBehaviour
         if (other.CompareTag("Enemy"))
         {
             // TODO: ใส่ damage ตรงนี้ได้
+
+            // เล่นเสียงกระทบ
+            if (hitSound != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFX(hitSound, hitVolume);
+            }
 
             Destroy(gameObject);
         }

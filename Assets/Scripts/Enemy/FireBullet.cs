@@ -38,6 +38,18 @@ public class FireBullet : MonoBehaviour
     [Tooltip("Tag ของผู้เล่น")]
     public string playerTag = "Player";
 
+    // ─── Audio Settings ───────────────────────────────────
+    [Header("Audio Settings")]
+    [Tooltip("เสียงเมื่อเริ่มยิงกระสุนไฟ")]
+    public AudioClip shootSound;
+    [Range(0f, 1f)]
+    public float shootVolume = 0.8f;
+
+    [Tooltip("เสียงปะทะเป้าหมาย/ผู้เล่น")]
+    public AudioClip impactSound;
+    [Range(0f, 1f)]
+    public float impactVolume = 0.8f;
+
     // ─── Private ──────────────────────────────────────────
     private bool hasHit = false;
     private Rigidbody rb;
@@ -58,6 +70,12 @@ public class FireBullet : MonoBehaviour
             {
                 rb.velocity = transform.forward * speed;
             }
+        }
+
+        // เล่นเสียงยิงกระสุนไฟ
+        if (shootSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(shootSound, shootVolume);
         }
 
         Destroy(gameObject, lifeTime);
@@ -143,6 +161,11 @@ public class FireBullet : MonoBehaviour
         {
             GameObject fx = Instantiate(impactVFX, transform.position, Quaternion.identity);
             Destroy(fx, vfxLifetime);
+        }
+
+        if (impactSound != null && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(impactSound, impactVolume);
         }
     }
 
