@@ -15,11 +15,10 @@ MonoBehaviour:
   poseName: 
   leftArmLift: 0
   leftArmSwing: 0
-  leftLegLift: 0
   leftLegSwing: 0
   rightArmLift: 0
   rightArmSwing: 0
-  rightLegLift: 0
   rightLegSwing: 0
   tolerance: 0.15
-  holdTime: 1
+  targetStepTolerance: 0.35
+  holdTime: 0.1
