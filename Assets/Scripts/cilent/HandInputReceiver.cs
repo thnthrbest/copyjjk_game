@@ -421,6 +421,7 @@ public class HandInputReceiver : MonoBehaviour
             yield return null;
         }
         Debug.Log($"[Skill] bullet time {bulletTimeDuration}วิ จบ → ปิด slow motion");
+        FireSkill(gesture);
 
         // 3) ปิด Bullet Time
         closebullet();
@@ -441,7 +442,6 @@ public class HandInputReceiver : MonoBehaviour
 
         // 5) ยิงสกิล
         Debug.Log($"[Skill] timeScale ปกติแล้ว → FireSkill: {gesture}");
-        FireSkill(gesture);
     }
 
     // ─── Logic จริงของการเรียกสกิล (เดิมคือ OnGestureDetected) ───
