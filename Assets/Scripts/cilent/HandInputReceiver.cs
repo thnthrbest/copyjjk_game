@@ -404,9 +404,12 @@ public class HandInputReceiver : MonoBehaviour
 
     public void TriggerSkillAfterBulletTime(string gesture)
     {
-        StartCoroutine(SkillSequence(gesture));
+        Debug.Log($"[Skill] ยิงสกิลทันทีโดยไม่ต้องรอ Bullet Time: {gesture}");
+        FireSkill(gesture);
+        closebullet();
     }
 
+    /*
     private System.Collections.IEnumerator SkillSequence(string gesture)
     {
         // 1) เปิด Bullet Time + UI Skill
@@ -422,7 +425,6 @@ public class HandInputReceiver : MonoBehaviour
         }
         Debug.Log($"[Skill] bullet time {bulletTimeDuration}วิ จบ → ปิด slow motion");
         FireSkill(gesture);
-
         // 3) ปิด Bullet Time
         closebullet();
 
@@ -443,6 +445,7 @@ public class HandInputReceiver : MonoBehaviour
         // 5) ยิงสกิล
         Debug.Log($"[Skill] timeScale ปกติแล้ว → FireSkill: {gesture}");
     }
+    */
 
     // ─── Logic จริงของการเรียกสกิล (เดิมคือ OnGestureDetected) ───
     public void OnGestureDetected(string gesture) => TriggerSkillAfterBulletTime(gesture);
