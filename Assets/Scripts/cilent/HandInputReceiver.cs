@@ -66,6 +66,16 @@ public class HandInputReceiver : MonoBehaviour
     public static string Gesture     = "dont";
     public static string CurrentMode = "control";  // ← โหมดปัจจุบัน
 
+    [Header("Idle Alert Settings")]
+    [Tooltip("GameObject Alert UI ที่จะเปิดเพื่อรัน Animation แจ้งเตือนผู้เล่น")]
+    public GameObject alertUI;
+
+    [Tooltip("ระยะเวลาเป็นวินาทีที่ถ้าอยู่สถานะ Idle/NONE ติดต่อกัน จะแจ้งเตือน")]
+    public float idleTimeoutDuration = 5f;
+
+    private float currentIdleTime = 0f;
+    private bool hasReceivedUdp = false;
+
     // ───── Finger Curl Data ─────
     public static FingerCurlData LeftHandCurl { get; private set; } = new FingerCurlData();
     public static FingerCurlData RightHandCurl { get; private set; } = new FingerCurlData();
@@ -179,6 +189,9 @@ public class HandInputReceiver : MonoBehaviour
                 RightHandCurl.pinky = HandDataReceiver.RightHand.pinky;
             }
         }
+
+        // ─── ตรวจสอบการรับค่า Idle / NONE ติดต่อกัน ───
+        CheckIdleAlert();
     }
 
     // =========================
@@ -231,6 +244,9 @@ public class HandInputReceiver : MonoBehaviour
             else if (line.StartsWith("R:"))
                 RightHand = line.Replace("R:", "").Trim();
         }
+
+        // กำหนดว่าเริ่มได้รับข้อมูลจาก Python แล้ว
+        hasReceivedUdp = true;
     }
 
     // =========================
@@ -404,9 +420,12 @@ public class HandInputReceiver : MonoBehaviour
 
     public void TriggerSkillAfterBulletTime(string gesture)
     {
-        StartCoroutine(SkillSequence(gesture));
+        Debug.Log($"[Skill] ยิงสกิลทันทีโดยไม่ต้องรอ Bullet Time: {gesture}");
+        FireSkill(gesture);
+        closebullet();
     }
 
+    /*
     private System.Collections.IEnumerator SkillSequence(string gesture)
     {
         // 1) เปิด Bullet Time + UI Skill
@@ -422,7 +441,6 @@ public class HandInputReceiver : MonoBehaviour
         }
         Debug.Log($"[Skill] bullet time {bulletTimeDuration}วิ จบ → ปิด slow motion");
         FireSkill(gesture);
-
         // 3) ปิด Bullet Time
         closebullet();
 
@@ -443,6 +461,7 @@ public class HandInputReceiver : MonoBehaviour
         // 5) ยิงสกิล
         Debug.Log($"[Skill] timeScale ปกติแล้ว → FireSkill: {gesture}");
     }
+    */
 
     // ─── Logic จริงของการเรียกสกิล (เดิมคือ OnGestureDetected) ───
     public void OnGestureDetected(string gesture) => TriggerSkillAfterBulletTime(gesture);
@@ -633,6 +652,53 @@ public class HandInputReceiver : MonoBehaviour
         {
             Debug.LogWarning($"[Minigame UDP] JSON parse error: {e.Message}\n{json}");
         }
+    }
+
+    // ───── IDLE ALERT LOGIC ─────
+    private void CheckIdleAlert()
+    {
+        if (CurrentMode.Equals("control", StringComparison.OrdinalIgnoreCase))
+        {
+            // ทำงานต่อเมื่อเคยได้รับข้อมูล UDP มาแล้วอย่างน้อย 1 ครั้ง เพื่อเลี่ยงการยิงเตือนช่วงยังไม่เชื่อมต่อ / โหลดเกม
+            if (!hasReceivedUdp) return;
+
+            bool isIdleState = LeftHand.Equals("Idle", StringComparison.OrdinalIgnoreCase) || 
+                               RightHand.Equals("NONE", StringComparison.OrdinalIgnoreCase);
+
+            if (isIdleState)
+            {
+                currentIdleTime += Time.deltaTime;
+
+                // ตรวจสอบเงื่อนไขว่าเกินเวลาหรือไม่
+                if (currentIdleTime >= idleTimeoutDuration)
+                {
+                    TriggerIdleAlert();
+                }
+            }
+            else
+            {
+                currentIdleTime = 0f;
+            }
+        }
+        else
+        {
+            currentIdleTime = 0f;
+        }
+    }
+
+    private void TriggerIdleAlert()
+    {
+        Debug.LogWarning($"[HandInputReceiver] เงื่อนไขแจ้งเตือนทำงาน! Idle นานสะสม: {currentIdleTime:F1}s. ปิดการทำงานเพื่อรอเปิดใหม่");
+
+        // รีเซ็ตค่าสถิติ
+        currentIdleTime = 0f;
+        hasReceivedUdp = false; // รีเซ็ตเพื่อรอบังคับรับข้อมูลรอบใหม่เมื่อเปิดกลับขึ้นมา
+
+        // เปิด Alert UI GameObject เพื่อเล่น Animation
+        alertUI.GetComponent<Animator>().SetTrigger("use");
+        
+        // ปิดการทำงานของตัวมันเองตามคำสั่ง "ปิดตัวเองไปรอโดนเปิดใหม่"
+        //alertUI.SetActive(false);
     }
 
     // =========================
