@@ -70,6 +70,18 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
+    [Tooltip("The setup scene name if setup is a separate scene")]
+    public string setupSceneName = "setup";
+
+    /// <summary>
+    /// Loads the setup scene
+    /// </summary>
+    public void OpenSetupScene()
+    {
+        Debug.Log($"MainMenu: Loading setup scene '{setupSceneName}'...");
+        SceneManager.LoadScene(setupSceneName);
+    }
+
     /// <summary>
     /// Opens setup panel if available, or loads stage_1 directly
     /// </summary>
@@ -81,7 +93,7 @@ public class MainMenuController : MonoBehaviour
         }
         else
         {
-            PlayGame();
+            OpenSetupScene();
         }
     }
 

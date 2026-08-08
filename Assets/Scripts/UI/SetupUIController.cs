@@ -27,6 +27,9 @@ public class SetupUIController : MonoBehaviour
     public Button startGameButton;
     public string nextStageSceneName = "stage_1";
 
+    public Button backToMenuButton;
+    public string mainMenuSceneName = "MainMenu";
+
     [Header("Sound Effects")]
     public AudioClip upgradeSuccessSound;
     public AudioClip upgradeFailSound;
@@ -43,6 +46,7 @@ public class SetupUIController : MonoBehaviour
         if (hpUpgradeButton != null) hpUpgradeButton.onClick.AddListener(OnUpgradeHPClicked);
         if (mpUpgradeButton != null) mpUpgradeButton.onClick.AddListener(OnUpgradeMPClicked);
         if (startGameButton != null) startGameButton.onClick.AddListener(OnStartGameClicked);
+        if (backToMenuButton != null) backToMenuButton.onClick.AddListener(OnBackToMainMenuClicked);
 
         UpdateUI();
     }
@@ -108,6 +112,12 @@ public class SetupUIController : MonoBehaviour
     {
         Debug.Log($"SetupUI: เข้าสู่ฉาก {nextStageSceneName}");
         SceneManager.LoadScene(nextStageSceneName);
+    }
+
+    public void OnBackToMainMenuClicked()
+    {
+        Debug.Log($"SetupUI: กลับสู่ฉาก {mainMenuSceneName}");
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 
     private PlayerStatsManager GetStatsManager()
