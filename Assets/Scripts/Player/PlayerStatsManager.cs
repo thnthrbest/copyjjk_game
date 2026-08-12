@@ -20,11 +20,20 @@ public class PlayerStatsManager : MonoBehaviour
     private const string KeyHPLevel = "HP_Level";
     private const string KeyMPLevel = "MP_Level";
 
+    private void Start()
+    {
+        // สร้าง Key ค่าเริ่มต้นใน PlayerPrefs ทันทีหากยังไม่มี
+        if (!PlayerPrefs.HasKey(KeyPoints)) PlayerPrefs.SetInt(KeyPoints, 0);
+        if (!PlayerPrefs.HasKey(KeyHPLevel)) PlayerPrefs.SetInt(KeyHPLevel, 0);
+        if (!PlayerPrefs.HasKey(KeyMPLevel)) PlayerPrefs.SetInt(KeyMPLevel, 0);
+        PlayerPrefs.Save();
+    }
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
+            transform.SetParent(null); // ปลดจาก Parent เพื่อให้เป็น Root GameObject ก่อน DontDestroyOnLoad
             DontDestroyOnLoad(gameObject);
         }
         else

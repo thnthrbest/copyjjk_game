@@ -107,6 +107,7 @@ public class SoundManager : MonoBehaviour
                 Debug.Log("SoundManager: Replacing empty/dummy instance with configured instance from scene.");
                 Destroy(_instance.gameObject);
                 _instance = this;
+                transform.SetParent(null);
                 DontDestroyOnLoad(gameObject);
                 LoadAndApplySettings();
                 return;
@@ -119,6 +120,7 @@ public class SoundManager : MonoBehaviour
         }
 
         _instance = this;
+        transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
 
         LoadAndApplySettings();

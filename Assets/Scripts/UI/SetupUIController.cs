@@ -16,12 +16,18 @@ public class SetupUIController : MonoBehaviour
     public TextMeshProUGUI hpMaxText;
     public TextMeshProUGUI hpCostText;
     public Button hpUpgradeButton;
+    public Image[] hpLevelImages;
+    public Color hpActiveColor = new Color32(82, 176, 75, 255); // #52B04B
+    public Color hpInactiveColor = new Color32(80, 80, 80, 128); // สีเทาจางสำหรับ level ที่ยังไม่ได้อัปเกรด
 
     [Header("MP Upgrade UI")]
     public TextMeshProUGUI mpLevelText;
     public TextMeshProUGUI mpMaxText;
     public TextMeshProUGUI mpCostText;
     public Button mpUpgradeButton;
+    public Image[] mpLevelImages;
+    public Color mpActiveColor = new Color32(106, 198, 241, 255); // #6AC6F1
+    public Color mpInactiveColor = new Color32(80, 80, 80, 128); // สีเทาจางสำหรับ level ที่ยังไม่ได้อัปเกรด
 
     [Header("Navigation UI")]
     public Button startGameButton;
@@ -43,10 +49,10 @@ public class SetupUIController : MonoBehaviour
         }
 
         // ผูกปุ่มกด
-        if (hpUpgradeButton != null) hpUpgradeButton.onClick.AddListener(OnUpgradeHPClicked);
-        if (mpUpgradeButton != null) mpUpgradeButton.onClick.AddListener(OnUpgradeMPClicked);
-        if (startGameButton != null) startGameButton.onClick.AddListener(OnStartGameClicked);
-        if (backToMenuButton != null) backToMenuButton.onClick.AddListener(OnBackToMainMenuClicked);
+        // if (hpUpgradeButton != null) hpUpgradeButton.onClick.AddListener(OnUpgradeHPClicked);
+        // if (mpUpgradeButton != null) mpUpgradeButton.onClick.AddListener(OnUpgradeMPClicked);
+        // if (startGameButton != null) startGameButton.onClick.AddListener(OnStartGameClicked);
+        // if (backToMenuButton != null) backToMenuButton.onClick.AddListener(OnBackToMainMenuClicked);
 
         UpdateUI();
     }
@@ -58,7 +64,7 @@ public class SetupUIController : MonoBehaviour
         // 1. แสดงแต้มคงเหลือ
         if (pointsText != null)
         {
-            pointsText.text = $"Points: {currentPoints}";
+            pointsText.text = $"{currentPoints}";
         }
 
         // 2. แสดงข้อมูล HP
@@ -69,7 +75,19 @@ public class SetupUIController : MonoBehaviour
         if (hpLevelText != null) hpLevelText.text = $"HP Level: {hpLevel}";
         if (hpMaxText != null) hpMaxText.text = $"Max HP: {maxHP}";
         if (hpCostText != null) hpCostText.text = $"Cost: {hpCost}";
-        if (hpUpgradeButton != null) hpUpgradeButton.interactable = (currentPoints >= hpCost);
+        //if (hpUpgradeButton != null) hpUpgradeButton.interactable = (currentPoints >= hpCost);
+
+        // อัปเดตสี Image ของ HP ตาม Level
+        if (hpLevelImages != null)
+        {
+            for (int i = 0; i < hpLevelImages.Length; i++)
+            {
+                if (hpLevelImages[i] != null)
+                {
+                    hpLevelImages[i].color = (i < hpLevel) ? hpActiveColor : hpInactiveColor;
+                }
+            }
+        }
 
         // 3. แสดงข้อมูล MP
         int mpLevel = PlayerStatsManager.GetMPLevel();
@@ -80,10 +98,23 @@ public class SetupUIController : MonoBehaviour
         if (mpMaxText != null) mpMaxText.text = $"Max MP: {maxMP}";
         if (mpCostText != null) mpCostText.text = $"Cost: {mpCost}";
         if (mpUpgradeButton != null) mpUpgradeButton.interactable = (currentPoints >= mpCost);
+
+        // อัปเดตสี Image ของ MP ตาม Level
+        if (mpLevelImages != null)
+        {
+            for (int i = 0; i < mpLevelImages.Length; i++)
+            {
+                if (mpLevelImages[i] != null)
+                {
+                    mpLevelImages[i].color = (i < mpLevel) ? mpActiveColor : mpInactiveColor;
+                }
+            }
+        }
     }
 
     public void OnUpgradeHPClicked()
     {
+        Debug.Log("kuy");
         if (GetStatsManager().TryUpgradeHP())
         {
             PlaySFX(upgradeSuccessSound);
