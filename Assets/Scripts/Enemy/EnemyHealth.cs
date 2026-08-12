@@ -7,16 +7,17 @@ public class EnemyHealth : MonoBehaviour
     public int Health = 30;
     public int Damage = 10;
 
-    // Update is called once per frame
+    private bool isDead = false;
+
     void Update()
     {
-        if(Health <= 0)
+        if (Health <= 0 && !isDead)
         {
-            PlayerEnergy.Instance?.OnKillEnemy();
-            Destroy(gameObject);
+            Die();
         }
     }
-    void OnTriggerEnter (Collider other)
+
+    void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Magic"))
         {
@@ -25,10 +26,30 @@ public class EnemyHealth : MonoBehaviour
             Health -= actualDamage;
             Debug.Log($"Hit! Damage dealt: {actualDamage}"); 
         }
-         if (other.CompareTag("dog"))
+
+        if (other.CompareTag("dog") && !isDead)
         {
-            Destroy(gameObject);
-             Debug.Log("โดนหมาแล้วตาย");
+            Debug.Log("โดนหมาแล้วตาย");
+            Die();
         }
+    }
+
+    private void Die()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        PlayerEnergy.Instance?.OnKillEnemy();
+
+        // 5% Chance to drop Charm Box for End-Game unboxing
+        if (Random.value <= 0.05f)
+        {
+            if (Charms.CharmManager.Instance != null)
+            {
+                Charms.CharmManager.Instance.AddRunBox(1);
+            }
+        }
+
+        Destroy(gameObject);
     }
 }

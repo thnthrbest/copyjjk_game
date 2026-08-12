@@ -75,7 +75,8 @@ public class SetupUIController : MonoBehaviour
         if (hpLevelText != null) hpLevelText.text = $"HP Level: {hpLevel}";
         if (hpMaxText != null) hpMaxText.text = $"Max HP: {maxHP}";
         if (hpCostText != null) hpCostText.text = $"Cost: {hpCost}";
-        //if (hpUpgradeButton != null) hpUpgradeButton.interactable = (currentPoints >= hpCost);
+        //
+        if (hpUpgradeButton != null) hpUpgradeButton.interactable = (currentPoints >= hpCost);
 
         // อัปเดตสี Image ของ HP ตาม Level
         if (hpLevelImages != null)

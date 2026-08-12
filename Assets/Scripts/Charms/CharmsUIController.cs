@@ -8,16 +8,12 @@ namespace Charms
     public class CharmsUIController : MonoBehaviour
     {
         [Header("Notch Info UI")]
-        public TextMeshProUGUI notchStatusText; // e.g. "Charms Equipped: 3 / 4 Notches"
+        public TextMeshProUGUI notchStatusText; // e.g. "ช่องเครื่องรางที่ใช้: 3 / 4"
         public Image[] notchSlots;               // Visual slot icons (e.g. 4 slot images)
         public Color activeSlotColor = Color.yellow;
         public Color emptySlotColor = Color.gray;
 
-        [Header("Charm Item Item Container")]
-        public Transform charmsContainer;       // Grid / Vertical layout for charm items
-        public GameObject charmCardPrefab;      // Prefab with icon, name, cost, button
-
-        [Header("Simple Default UI (if no prefab)")]
+        [Header("Simple Default UI (if using direct inspector button list)")]
         public Button[] defaultCharmButtons;    // Optional manual button list for 7 charms
 
         private void Start()
@@ -45,7 +41,7 @@ namespace Charms
             int used = CharmManager.Instance.GetCurrentUsedNotches();
             int max = CharmManager.Instance.maxNotchSlots;
 
-            // 1. Update text
+            // 1. Update notch status text
             if (notchStatusText != null)
             {
                 notchStatusText.text = $"ช่องเครื่องรางที่ใช้: {used} / {max}";
@@ -63,7 +59,7 @@ namespace Charms
                 }
             }
 
-            // 3. Update buttons if using direct inspector button list
+            // 3. Update charm buttons if assigned directly in Inspector
             List<CharmItem> allCharms = CharmManager.Instance.GetAllCharms();
             if (defaultCharmButtons != null && defaultCharmButtons.Length > 0)
             {
@@ -73,37 +69,69 @@ namespace Charms
                     if (btn == null) continue;
 
                     CharmItem item = allCharms[i];
-                    bool isEquipped = CharmManager.Instance.IsEquipped(item.id);
+                    int owned = CharmManager.Instance.GetOwnedCount(item.id);
+                    int equipped = CharmManager.Instance.GetEquippedCount(item.id);
                     bool canEquip = CharmManager.Instance.CanEquip(item);
 
                     // Update button state / text
                     TextMeshProUGUI btnText = btn.GetComponentInChildren<TextMeshProUGUI>();
                     if (btnText != null)
                     {
-                        btnText.text = isEquipped ? $"{item.charmName} (ถอดออก)" : $"{item.charmName} ({item.notchCost} ช่อง)";
+                        if (owned == 0)
+                        {
+                            btnText.text = $"{item.charmName}\n(ยังไม่มีในคลัง)";
+                        }
+                        else
+                        {
+                            btnText.text = $"{item.charmName} ({item.notchCost} ช่อง)\nใส่แล้ว {equipped} / มี {owned} ชิ้น";
+                        }
                     }
 
-                    btn.interactable = isEquipped || canEquip;
+                    // Enable button if player owns item AND (can equip another OR has at least 1 equipped to unequip)
+                    btn.interactable = (owned > 0) && (canEquip || equipped > 0);
 
-                    // Bind click
+                    // Bind click: If max equipped or can't equip, click unequips; otherwise equips another
                     string charmId = item.id;
                     btn.onClick.RemoveAllListeners();
-                    btn.onClick.AddListener(() => ToggleCharm(charmId));
+                    btn.onClick.AddListener(() => OnCharmButtonClicked(charmId));
                 }
             }
         }
 
-        public void ToggleCharm(string charmId)
+        public void OnCharmButtonClicked(string charmId)
         {
             if (CharmManager.Instance == null) return;
 
-            if (CharmManager.Instance.IsEquipped(charmId))
+            CharmItem item = CharmManager.Instance.GetCharmById(charmId);
+            if (item == null) return;
+
+            int owned = CharmManager.Instance.GetOwnedCount(charmId);
+            int equipped = CharmManager.Instance.GetEquippedCount(charmId);
+
+            // If we can equip another copy, equip it. Otherwise if already equipped, unequip one copy.
+            if (CharmManager.Instance.CanEquip(item))
+            {
+                CharmManager.Instance.EquipCharm(charmId);
+            }
+            else if (equipped > 0)
             {
                 CharmManager.Instance.UnequipCharm(charmId);
             }
-            else
+        }
+
+        public void EquipOne(string charmId)
+        {
+            if (CharmManager.Instance != null)
             {
                 CharmManager.Instance.EquipCharm(charmId);
+            }
+        }
+
+        public void UnequipOne(string charmId)
+        {
+            if (CharmManager.Instance != null)
+            {
+                CharmManager.Instance.UnequipCharm(charmId);
             }
         }
     }

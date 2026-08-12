@@ -18,16 +18,23 @@ namespace Charms
         public AudioClip equipSound;
         public AudioClip unequipSound;
         public AudioClip failSound;
+        public AudioClip boxOpenSound;
 
-        // PlayerPrefs Key
-        private const string PrefsEquippedCharmsKey = "EquippedCharms";
+        // PlayerPrefs Keys
+        private const string PrefsOwnedCharmsKey = "OwnedCharms_Data";
+        private const string PrefsEquippedCharmsKey = "EquippedCharms_List";
 
-        // Runtime Lists
+        // Runtime State
         private List<CharmItem> allCharms = new List<CharmItem>();
-        private HashSet<string> equippedCharmIds = new HashSet<string>();
+        private Dictionary<string, int> ownedCharmsCount = new Dictionary<string, int>();
+        private List<string> equippedCharmIdsList = new List<string>();
 
-        // Events for UI update
+        // Current Run State (Box drops collected in active stage run)
+        private int currentRunBoxesCount = 0;
+
+        // Events for UI Updates
         public event Action OnCharmsChanged;
+        public event Action<int> OnBoxesCountChanged;
 
         private void Awake()
         {
@@ -37,7 +44,7 @@ namespace Charms
                 transform.SetParent(null);
                 DontDestroyOnLoad(gameObject);
                 InitializeCharmsList();
-                LoadEquippedCharms();
+                LoadData();
             }
             else
             {
@@ -46,7 +53,7 @@ namespace Charms
         }
 
         /// <summary>
-        /// เตรียมรายชื่อเครื่องรางทั้งหมด 7 ชิ้น (ดึงจาก SO หรือใช้อัตโนมัติถ้าไม่มี SO)
+        /// เตรียมรายชื่อเครื่องรางทั้งหมด 7 ชิ้น
         /// </summary>
         private void InitializeCharmsList()
         {
@@ -56,14 +63,13 @@ namespace Charms
                 return;
             }
 
-            // Default fallback List ทั้งหมด 7 ชิ้นตามข้อกำหนด
             allCharms = new List<CharmItem>
             {
                 new CharmItem
                 {
                     id = "charm_fireball_heal",
                     charmName = "เครื่องรางเพลิงเยียวยา",
-                    description = "เก็บลูกไฟได้เลือดเยอะขึ้น 50%",
+                    description = "เก็บลูกไฟได้เลือดเยอะขึ้น 50% ต่อชิ้น",
                     notchCost = 2,
                     effectType = CharmEffectType.FireballHealBoost,
                     value = 0.50f
@@ -72,7 +78,7 @@ namespace Charms
                 {
                     id = "charm_rabbit_duration",
                     charmName = "เครื่องรางกระต่ายท่องนภา",
-                    description = "เพิ่มระยะเวลาของอาคมกระต่ายนานขึ้น 10 วินาที",
+                    description = "เพิ่มระยะเวลาของอาคมกระต่ายนานขึ้น 10 วินาทีต่อชิ้น",
                     notchCost = 1,
                     effectType = CharmEffectType.RabbitDurationAdd,
                     value = 10f
@@ -81,7 +87,7 @@ namespace Charms
                 {
                     id = "charm_wolf_summon",
                     charmName = "เครื่องรางจ่าฝูงหมาป่า",
-                    description = "เพิ่มจำนวนการอัญเชิญหมาป่าของอาคมหมาป่า 1 ตัว",
+                    description = "เพิ่มจำนวนการอัญเชิญหมาป่าของอาคมหมาป่า 1 ตัวต่อชิ้น",
                     notchCost = 1,
                     effectType = CharmEffectType.WolfSummonAdd,
                     value = 1f
@@ -90,7 +96,7 @@ namespace Charms
                 {
                     id = "charm_deer_regen",
                     charmName = "เครื่องรางกวางพฤกษา",
-                    description = "เพิ่มอัตราการฟื้นฟูของอาคมกวาง 50%",
+                    description = "เพิ่มอัตราการฟื้นฟูของอาคมกวาง 50% ต่อชิ้น",
                     notchCost = 1,
                     effectType = CharmEffectType.DeerRegenBoost,
                     value = 0.50f
@@ -99,7 +105,7 @@ namespace Charms
                 {
                     id = "charm_bull_duration",
                     charmName = "เครื่องรางวัวถึกทรหด",
-                    description = "เพิ่มระยะเวลาของอาคมวัวนานขึ้น 5 วินาที",
+                    description = "เพิ่มระยะเวลาของอาคมวัวนานขึ้น 5 วินาทีต่อชิ้น",
                     notchCost = 1,
                     effectType = CharmEffectType.BullDurationAdd,
                     value = 5f
@@ -108,7 +114,7 @@ namespace Charms
                 {
                     id = "charm_base_attack",
                     charmName = "เครื่องรางทรงพลัง",
-                    description = "เพิ่มพลังการโจมตีพื้นฐาน 50%",
+                    description = "เพิ่มพลังการโจมตีพื้นฐาน 50% ต่อชิ้น",
                     notchCost = 2,
                     effectType = CharmEffectType.BaseAttackBoost,
                     value = 0.50f
@@ -117,7 +123,7 @@ namespace Charms
                 {
                     id = "charm_attack_speed",
                     charmName = "เครื่องรางวายุว่องไว",
-                    description = "เพิ่มความเร็วในการโจมตี 50%",
+                    description = "เพิ่มความเร็วในการโจมตี 50% ต่อชิ้น",
                     notchCost = 2,
                     effectType = CharmEffectType.AttackSpeedBoost,
                     value = 0.50f
@@ -126,15 +132,97 @@ namespace Charms
         }
 
         // ─────────────────────────────
-        //  Notch Logic & Validation
+        //  Box Drop & Gacha System
+        // ─────────────────────────────
+
+        public void AddRunBox(int amount = 1)
+        {
+            currentRunBoxesCount += amount;
+            Debug.Log($"[CharmManager] 📦 ได้รับกล่องเครื่องราง! ในรอบนี้รวมสะสมได้: {currentRunBoxesCount} กล่อง");
+            OnBoxesCountChanged?.Invoke(currentRunBoxesCount);
+        }
+
+        public int GetRunBoxesCount()
+        {
+            return currentRunBoxesCount;
+        }
+
+        public void ResetRunBoxes()
+        {
+            currentRunBoxesCount = 0;
+            OnBoxesCountChanged?.Invoke(currentRunBoxesCount);
+        }
+
+        /// <summary>
+        /// เปิดกล่องเครื่องราง 1 กล่อง สุ่มได้ 1 ชิ้น (สุ่มออกซ้ำได้)
+        /// </summary>
+        public CharmItem OpenOneBox()
+        {
+            if (allCharms.Count == 0) return null;
+
+            // สุ่ม 1 ชิ้นจากที่มีทั้งหมด
+            int randomIndex = UnityEngine.Random.Range(0, allCharms.Count);
+            CharmItem pulledCharm = allCharms[randomIndex];
+
+            // เพิ่มจำนวนในคลังสะสม
+            AddOwnedCharm(pulledCharm.id, 1);
+
+            if (currentRunBoxesCount > 0)
+            {
+                currentRunBoxesCount--;
+                OnBoxesCountChanged?.Invoke(currentRunBoxesCount);
+            }
+
+            PlaySFX(boxOpenSound);
+            Debug.Log($"[CharmManager] 🎉 เปิดกล่องได้: {pulledCharm.charmName}! (จำนวนรวมในครอบครอง: {GetOwnedCount(pulledCharm.id)} ชิ้น)");
+            return pulledCharm;
+        }
+
+        // ─────────────────────────────
+        //  Owned & Stackable Inventory
+        // ─────────────────────────────
+
+        public int GetOwnedCount(string charmId)
+        {
+            if (ownedCharmsCount.TryGetValue(charmId, out int count))
+            {
+                return count;
+            }
+            return 0;
+        }
+
+        public void AddOwnedCharm(string charmId, int amount = 1)
+        {
+            if (!ownedCharmsCount.ContainsKey(charmId))
+            {
+                ownedCharmsCount[charmId] = 0;
+            }
+            ownedCharmsCount[charmId] += amount;
+            SaveData();
+            OnCharmsChanged?.Invoke();
+        }
+
+        public int GetEquippedCount(string charmId)
+        {
+            int count = 0;
+            foreach (string id in equippedCharmIdsList)
+            {
+                if (id == charmId) count++;
+            }
+            return count;
+        }
+
+        // ─────────────────────────────
+        //  Notch & Equip Logic (Stackable)
         // ─────────────────────────────
 
         public int GetCurrentUsedNotches()
         {
             int used = 0;
-            foreach (var charm in allCharms)
+            foreach (string id in equippedCharmIdsList)
             {
-                if (equippedCharmIds.Contains(charm.id))
+                CharmItem charm = GetCharmById(id);
+                if (charm != null)
                 {
                     used += charm.notchCost;
                 }
@@ -150,18 +238,16 @@ namespace Charms
         public bool CanEquip(CharmItem charm)
         {
             if (charm == null) return false;
-            if (IsEquipped(charm.id)) return false;
+
+            // เช็คว่ามีของในคลังพอให้ใส่อีกชิ้นไหม
+            if (GetEquippedCount(charm.id) >= GetOwnedCount(charm.id))
+            {
+                return false;
+            }
+
+            // เช็คว่า Notch เหลือพอไหม
             return (GetCurrentUsedNotches() + charm.notchCost) <= maxNotchSlots;
         }
-
-        public bool IsEquipped(string charmId)
-        {
-            return equippedCharmIds.Contains(charmId);
-        }
-
-        // ─────────────────────────────
-        //  Equip / Unequip Actions
-        // ─────────────────────────────
 
         public bool EquipCharm(string charmId)
         {
@@ -173,23 +259,24 @@ namespace Charms
                 return false;
             }
 
-            if (IsEquipped(charmId))
-            {
-                Debug.LogWarning($"[CharmManager] เครื่องราง {charm.charmName} สวมใส่อยู่แล้ว");
-                return false;
-            }
-
             if (!CanEquip(charm))
             {
-                Debug.LogWarning($"[CharmManager] ช่องเครื่องรางไม่เพียงพอ! ต้องการ {charm.notchCost} ช่อง แต่เหลือเพียง {GetRemainingNotches()} ช่อง");
+                if (GetEquippedCount(charmId) >= GetOwnedCount(charmId))
+                {
+                    Debug.LogWarning($"[CharmManager] จำนวนเครื่องราง {charm.charmName} ในคลังถูกสวมใส่ครบแล้ว ({GetEquippedCount(charmId)}/{GetOwnedCount(charmId)})");
+                }
+                else
+                {
+                    Debug.LogWarning($"[CharmManager] ช่องเครื่องรางไม่เพียงพอ! ต้องการ {charm.notchCost} ช่อง แต่เหลือเพียง {GetRemainingNotches()} ช่อง");
+                }
                 PlaySFX(failSound);
                 return false;
             }
 
-            equippedCharmIds.Add(charmId);
-            SaveEquippedCharms();
+            equippedCharmIdsList.Add(charmId);
+            SaveData();
             PlaySFX(equipSound);
-            Debug.Log($"[CharmManager] สวมใส่เครื่องราง: {charm.charmName} (ใช้ {charm.notchCost} ช่อง | รวมใช้ไป {GetCurrentUsedNotches()}/{maxNotchSlots})");
+            Debug.Log($"[CharmManager] สวมใส่เครื่องราง: {charm.charmName} (ใช้ไป {GetCurrentUsedNotches()}/{maxNotchSlots} ช่อง)");
 
             OnCharmsChanged?.Invoke();
             return true;
@@ -197,16 +284,16 @@ namespace Charms
 
         public bool UnequipCharm(string charmId)
         {
-            if (!IsEquipped(charmId))
+            if (!equippedCharmIdsList.Contains(charmId))
             {
-                Debug.LogWarning($"[CharmManager] เครื่องราง ID {charmId} ไม่ได้สวมใส่อยู่");
+                Debug.LogWarning($"[CharmManager] เครื่องราง ID {charmId}ไม่ได้สวมใส่อยู่");
                 return false;
             }
 
-            equippedCharmIds.Remove(charmId);
-            SaveEquippedCharms();
+            equippedCharmIdsList.Remove(charmId);
+            SaveData();
             PlaySFX(unequipSound);
-            Debug.Log($"[CharmManager] ถอดเครื่องราง ID: {charmId} ออกเรียบร้อย");
+            Debug.Log($"[CharmManager] ถอดเครื่องราง ID: {charmId} ออก 1 ชิ้น");
 
             OnCharmsChanged?.Invoke();
             return true;
@@ -214,8 +301,8 @@ namespace Charms
 
         public void UnequipAll()
         {
-            equippedCharmIds.Clear();
-            SaveEquippedCharms();
+            equippedCharmIdsList.Clear();
+            SaveData();
             OnCharmsChanged?.Invoke();
         }
 
@@ -228,17 +315,9 @@ namespace Charms
             return allCharms;
         }
 
-        public List<CharmItem> GetEquippedCharms()
+        public List<string> GetEquippedCharmIdsList()
         {
-            List<CharmItem> list = new List<CharmItem>();
-            foreach (var charm in allCharms)
-            {
-                if (equippedCharmIds.Contains(charm.id))
-                {
-                    list.Add(charm);
-                }
-            }
-            return list;
+            return new List<string>(equippedCharmIdsList);
         }
 
         public CharmItem GetCharmById(string id)
@@ -247,100 +326,142 @@ namespace Charms
         }
 
         // ─────────────────────────────
-        //  Gameplay Bonus Multiplier Helpers
+        //  Stacking Gameplay Multiplier Helpers
         // ─────────────────────────────
 
         /// <summary>
-        /// 1. เพิ่มการฮีลจากลูกไฟ 50% (คูณ 1.5)
+        /// 1. เพิ่มการฮีลจากลูกไฟ 50% ต่อชิ้นที่สวมใส่
         /// </summary>
         public float GetFireballHealMultiplier()
         {
-            return IsEquipped("charm_fireball_heal") ? 1.5f : 1.0f;
+            int count = GetEquippedCount("charm_fireball_heal");
+            return 1.0f + (count * 0.50f);
         }
 
         /// <summary>
-        /// 2. เพิ่มระยะเวลาอาคมกระต่าย 10 วิ
+        /// 2. เพิ่มระยะเวลาอาคมกระต่าย +10 วิ ต่อชิ้นที่สวมใส่
         /// </summary>
         public float GetRabbitExtraDuration()
         {
-            return IsEquipped("charm_rabbit_duration") ? 10.0f : 0.0f;
+            int count = GetEquippedCount("charm_rabbit_duration");
+            return count * 10.0f;
         }
 
         /// <summary>
-        /// 3. เพิ่มจำนวนหมาป่า 1 ตัว
+        /// 3. เพิ่มจำนวนหมาป่า +1 ตัว ต่อชิ้นที่สวมใส่
         /// </summary>
         public int GetWolfExtraSummonCount()
         {
-            return IsEquipped("charm_wolf_summon") ? 1 : 0;
+            return GetEquippedCount("charm_wolf_summon");
         }
 
         /// <summary>
-        /// 4. เพิ่มอัตราการฟื้นฟูอาคมกวาง 50% (คูณ 1.5)
+        /// 4. เพิ่มอัตราการฟื้นฟูอาคมกวาง 50% ต่อชิ้นที่สวมใส่
         /// </summary>
         public float GetDeerRegenMultiplier()
         {
-            return IsEquipped("charm_deer_regen") ? 1.5f : 1.0f;
+            int count = GetEquippedCount("charm_deer_regen");
+            return 1.0f + (count * 0.50f);
         }
 
         /// <summary>
-        /// 5. เพิ่มระยะเวลาอาคมวัว 5 วิ
+        /// 5. เพิ่มระยะเวลาอาคมวัว +5 วิ ต่อชิ้นที่สวมใส่
         /// </summary>
         public float GetBullExtraDuration()
         {
-            return IsEquipped("charm_bull_duration") ? 5.0f : 0.0f;
+            int count = GetEquippedCount("charm_bull_duration");
+            return count * 5.0f;
         }
 
         /// <summary>
-        /// 6. เพิ่มพลังโจมตีพื้นฐาน 50% (คูณ 1.5)
+        /// 6. เพิ่มพลังโจมตีพื้นฐาน 50% ต่อชิ้นที่สวมใส่
         /// </summary>
         public float GetBaseAttackMultiplier()
         {
-            return IsEquipped("charm_base_attack") ? 1.5f : 1.0f;
+            int count = GetEquippedCount("charm_base_attack");
+            return 1.0f + (count * 0.50f);
         }
 
         /// <summary>
-        /// 7. เพิ่มความเร็วในการโจมตี 50% (คูณ 1.5)
+        /// 7. เพิ่มความเร็วในการโจมตี 50% ต่อชิ้นที่สวมใส่
         /// </summary>
         public float GetAttackSpeedMultiplier()
         {
-            return IsEquipped("charm_attack_speed") ? 1.5f : 1.0f;
+            int count = GetEquippedCount("charm_attack_speed");
+            return 1.0f + (count * 0.50f);
         }
 
         // ─────────────────────────────
-        //  Save / Load
+        //  Save / Load Data (JSON in PlayerPrefs)
         // ─────────────────────────────
 
-        private void SaveEquippedCharms()
+        private void SaveData()
         {
-            string[] array = new string[equippedCharmIds.Count];
-            equippedCharmIds.CopyTo(array);
-            string json = JsonUtility.ToJson(new CharmSaveData { equippedIds = array });
-            PlayerPrefs.SetString(PrefsEquippedCharmsKey, json);
+            // 1. Save Owned
+            List<OwnedEntry> ownedList = new List<OwnedEntry>();
+            foreach (var kvp in ownedCharmsCount)
+            {
+                ownedList.Add(new OwnedEntry { id = kvp.Key, count = kvp.Value });
+            }
+            string jsonOwned = JsonUtility.ToJson(new OwnedContainer { entries = ownedList.ToArray() });
+            PlayerPrefs.SetString(PrefsOwnedCharmsKey, jsonOwned);
+
+            // 2. Save Equipped List
+            string jsonEquipped = JsonUtility.ToJson(new EquippedContainer { list = equippedCharmIdsList.ToArray() });
+            PlayerPrefs.SetString(PrefsEquippedCharmsKey, jsonEquipped);
+
             PlayerPrefs.Save();
         }
 
-        private void LoadEquippedCharms()
+        private void LoadData()
         {
-            equippedCharmIds.Clear();
-            if (PlayerPrefs.HasKey(PrefsEquippedCharmsKey))
+            ownedCharmsCount.Clear();
+            equippedCharmIdsList.Clear();
+
+            // Load Owned Data
+            if (PlayerPrefs.HasKey(PrefsOwnedCharmsKey))
             {
-                string json = PlayerPrefs.GetString(PrefsEquippedCharmsKey, "");
-                if (!string.IsNullOrEmpty(json))
+                string jsonOwned = PlayerPrefs.GetString(PrefsOwnedCharmsKey, "");
+                if (!string.IsNullOrEmpty(jsonOwned))
                 {
                     try
                     {
-                        CharmSaveData saveData = JsonUtility.FromJson<CharmSaveData>(json);
-                        if (saveData != null && saveData.equippedIds != null)
+                        OwnedContainer container = JsonUtility.FromJson<OwnedContainer>(jsonOwned);
+                        if (container != null && container.entries != null)
                         {
-                            foreach (string id in saveData.equippedIds)
+                            foreach (var entry in container.entries)
                             {
-                                equippedCharmIds.Add(id);
+                                ownedCharmsCount[entry.id] = entry.count;
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogError($"[CharmManager] Error loading charms save data: {ex.Message}");
+                        Debug.LogError($"[CharmManager] Error loading owned charms: {ex.Message}");
+                    }
+                }
+            }
+
+            // Load Equipped List Data
+            if (PlayerPrefs.HasKey(PrefsEquippedCharmsKey))
+            {
+                string jsonEquipped = PlayerPrefs.GetString(PrefsEquippedCharmsKey, "");
+                if (!string.IsNullOrEmpty(jsonEquipped))
+                {
+                    try
+                    {
+                        EquippedContainer container = JsonUtility.FromJson<EquippedContainer>(jsonEquipped);
+                        if (container != null && container.list != null)
+                        {
+                            foreach (string id in container.list)
+                            {
+                                equippedCharmIdsList.Add(id);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[CharmManager] Error loading equipped charms: {ex.Message}");
                     }
                 }
             }
@@ -355,9 +476,22 @@ namespace Charms
         }
 
         [Serializable]
-        private class CharmSaveData
+        private class OwnedEntry
         {
-            public string[] equippedIds;
+            public string id;
+            public int count;
+        }
+
+        [Serializable]
+        private class OwnedContainer
+        {
+            public OwnedEntry[] entries;
+        }
+
+        [Serializable]
+        private class EquippedContainer
+        {
+            public string[] list;
         }
     }
 }
