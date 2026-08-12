@@ -20,8 +20,10 @@ public class EnemyHealth : MonoBehaviour
     {
         if (other.CompareTag("Magic"))
         {
-            Health -= Damage;
-            Debug.Log("hit"); 
+            float baseAtkMult = Charms.CharmManager.Instance != null ? Charms.CharmManager.Instance.GetBaseAttackMultiplier() : 1.0f;
+            int actualDamage = Mathf.RoundToInt(Damage * baseAtkMult);
+            Health -= actualDamage;
+            Debug.Log($"Hit! Damage dealt: {actualDamage}"); 
         }
          if (other.CompareTag("dog"))
         {

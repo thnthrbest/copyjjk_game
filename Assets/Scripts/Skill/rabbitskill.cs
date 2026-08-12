@@ -32,7 +32,8 @@ public class rabbitskill : MonoBehaviour
         if (isActive)
         {
             activeTimer += Time.deltaTime;
-            if (activeTimer >= activeDuration)
+            float extraDur = Charms.CharmManager.Instance != null ? Charms.CharmManager.Instance.GetRabbitExtraDuration() : 0f;
+            if (activeTimer >= (activeDuration + extraDur))
                 StopSkill();
         }
     }
@@ -62,9 +63,12 @@ public class rabbitskill : MonoBehaviour
             SoundManager.Instance.PlaySFXAtPoint(summonSound, transform.position);
         }
 
-        playerHealth.activeDuration = activeDuration; // บอก PlayerHealth ว่า skill กำลังทำงาน
+        float extraDur = Charms.CharmManager.Instance != null ? Charms.CharmManager.Instance.GetRabbitExtraDuration() : 0f;
+        float totalDuration = activeDuration + extraDur;
+
+        playerHealth.activeDuration = totalDuration; // บอก PlayerHealth ว่า skill กำลังทำงาน
         InvokeRepeating(nameof(TryBlockBullet), 0.2f, checkInterval);
-        Debug.Log($"[Shield] Skill เปิดแล้ว! ทำงาน {activeDuration} วิ");
+        Debug.Log($"[Shield] Skill เปิดแล้ว! ทำงาน {totalDuration} วิ (รวมโบนัสเครื่องราง +{extraDur} วิ)");
     }
 
     void StopSkill()

@@ -159,7 +159,8 @@ public class PlayerCombatLock : MonoBehaviour
         if (Time.time < nextShootTime) return;
         if (currentTarget == null) return;
 
-        nextShootTime = Time.time + shootCooldown;
+        float atkSpeedMult = Charms.CharmManager.Instance != null ? Charms.CharmManager.Instance.GetAttackSpeedMultiplier() : 1.0f;
+        nextShootTime = Time.time + (shootCooldown / atkSpeedMult);
 
         GameObject bullet = Instantiate(
             bulletPrefab,
