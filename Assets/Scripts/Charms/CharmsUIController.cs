@@ -13,8 +13,14 @@ namespace Charms
         public Color activeSlotColor = Color.yellow;
         public Color emptySlotColor = Color.gray;
 
-        [Header("Simple Default UI (if using direct inspector button list)")]
-        public Button[] defaultCharmButtons;    // Optional manual button list for 7 charms
+        [Header("Vertical Scroll View UI")]
+        [Tooltip("Content Transform ของ Scroll View สำหรับวางเรียง Card เครื่องรางลงมาตามแนวตั้ง")]
+        public Transform charmsContentContainer; // Content Object ใน Scroll View
+        [Tooltip("Prefab การ์ดเครื่องราง (ต้องมีคอมโพเนนต์ CharmCardUI)")]
+        public GameObject charmCardPrefab;      // Card Prefab
+
+        [Header("Empty Inventory Warning UI")]
+        public GameObject emptyInventoryTextObject; // แสดงเมื่อผู้เล่นยังไม่มีเครื่องรางในคลังเลย
 
         private void Start()
         {
@@ -41,13 +47,13 @@ namespace Charms
             int used = CharmManager.Instance.GetCurrentUsedNotches();
             int max = CharmManager.Instance.maxNotchSlots;
 
-            // 1. Update notch status text
+            // 1. อัปเดตข้อความแสดงจำนวน Notch
             if (notchStatusText != null)
             {
                 notchStatusText.text = $"ช่องเครื่องรางที่ใช้: {used} / {max}";
             }
 
-            // 2. Update visual slots
+            // 2. อัปเดตสล็อตไอคอน Notch
             if (notchSlots != null)
             {
                 for (int i = 0; i < notchSlots.Length; i++)
@@ -59,79 +65,53 @@ namespace Charms
                 }
             }
 
-            // 3. Update charm buttons if assigned directly in Inspector
-            List<CharmItem> allCharms = CharmManager.Instance.GetAllCharms();
-            if (defaultCharmButtons != null && defaultCharmButtons.Length > 0)
+            // 3. สร้าง Card แสดงเครื่องรางที่มีอยู่ใน Vertical Scroll View
+            RenderOwnedCharmCards();
+        }
+
+        /// <summary>
+        /// ดึงเครื่องรางที่มีอยู่ (GetOwnedCount > 0) มาสร้างเป็น Card เรียงใน Vertical Scroll View
+        /// </summary>
+        private void RenderOwnedCharmCards()
+        {
+            if (charmsContentContainer == null || charmCardPrefab == null) return;
+
+            // ลบ Card เก่าออกก่อน
+            foreach (Transform child in charmsContentContainer)
             {
-                for (int i = 0; i < defaultCharmButtons.Length && i < allCharms.Count; i++)
+                Destroy(child.gameObject);
+            }
+
+            List<CharmItem> allCharms = CharmManager.Instance.GetAllCharms();
+            int renderedCount = 0;
+
+            foreach (CharmItem item in allCharms)
+            {
+                int ownedCount = CharmManager.Instance.GetOwnedCount(item.id);
+
+                // **แสดงเฉพาะเครื่องรางที่มีอยู่ในคลังเท่านั้น (ownedCount > 0)**
+                if (ownedCount > 0)
                 {
-                    Button btn = defaultCharmButtons[i];
-                    if (btn == null) continue;
+                    GameObject cardObj = Instantiate(charmCardPrefab, charmsContentContainer);
+                    CharmCardUI cardUI = cardObj.GetComponent<CharmCardUI>();
 
-                    CharmItem item = allCharms[i];
-                    int owned = CharmManager.Instance.GetOwnedCount(item.id);
-                    int equipped = CharmManager.Instance.GetEquippedCount(item.id);
-                    bool canEquip = CharmManager.Instance.CanEquip(item);
-
-                    // Update button state / text
-                    TextMeshProUGUI btnText = btn.GetComponentInChildren<TextMeshProUGUI>();
-                    if (btnText != null)
+                    if (cardUI != null)
                     {
-                        if (owned == 0)
-                        {
-                            btnText.text = $"{item.charmName}\n(ยังไม่มีในคลัง)";
-                        }
-                        else
-                        {
-                            btnText.text = $"{item.charmName} ({item.notchCost} ช่อง)\nใส่แล้ว {equipped} / มี {owned} ชิ้น";
-                        }
+                        cardUI.SetupCard(item);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[CharmsUIController] charmCardPrefab ไม่มีคอมโพเนนต์ CharmCardUI!");
                     }
 
-                    // Enable button if player owns item AND (can equip another OR has at least 1 equipped to unequip)
-                    btn.interactable = (owned > 0) && (canEquip || equipped > 0);
-
-                    // Bind click: If max equipped or can't equip, click unequips; otherwise equips another
-                    string charmId = item.id;
-                    btn.onClick.RemoveAllListeners();
-                    btn.onClick.AddListener(() => OnCharmButtonClicked(charmId));
+                    renderedCount++;
                 }
             }
-        }
 
-        public void OnCharmButtonClicked(string charmId)
-        {
-            if (CharmManager.Instance == null) return;
-
-            CharmItem item = CharmManager.Instance.GetCharmById(charmId);
-            if (item == null) return;
-
-            int owned = CharmManager.Instance.GetOwnedCount(charmId);
-            int equipped = CharmManager.Instance.GetEquippedCount(charmId);
-
-            // If we can equip another copy, equip it. Otherwise if already equipped, unequip one copy.
-            if (CharmManager.Instance.CanEquip(item))
+            // แสดงข้อความแจ้งเตือนถ้ายังไม่มีเครื่องรางเลย
+            if (emptyInventoryTextObject != null)
             {
-                CharmManager.Instance.EquipCharm(charmId);
-            }
-            else if (equipped > 0)
-            {
-                CharmManager.Instance.UnequipCharm(charmId);
-            }
-        }
-
-        public void EquipOne(string charmId)
-        {
-            if (CharmManager.Instance != null)
-            {
-                CharmManager.Instance.EquipCharm(charmId);
-            }
-        }
-
-        public void UnequipOne(string charmId)
-        {
-            if (CharmManager.Instance != null)
-            {
-                CharmManager.Instance.UnequipCharm(charmId);
+                emptyInventoryTextObject.SetActive(renderedCount == 0);
             }
         }
     }
