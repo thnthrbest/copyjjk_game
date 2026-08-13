@@ -53,6 +53,9 @@ namespace Charms
                 notchStatusText.text = $"ช่องเครื่องรางที่ใช้: {used} / {max}";
             }
 
+            // ดึงรายการ Icon ของเครื่องรางที่สวมใส่อยู่ตามจำนวน Notch ที่ใช้
+            List<Sprite> equippedIcons = GetEquippedCharmIcons();
+
             // 2. อัปเดตสล็อตไอคอน Notch
             if (notchSlots != null)
             {
@@ -60,13 +63,76 @@ namespace Charms
                 {
                     if (notchSlots[i] != null)
                     {
-                        notchSlots[i].color = (i < used) ? activeSlotColor : emptySlotColor;
+                        bool isSlotActive = (i < used);
+                        notchSlots[i].color = isSlotActive ? activeSlotColor : emptySlotColor;
+
+                        // อัปเดต child Image (ถ้ามี) ให้แสดงไอคอนของ Charm ที่สวมใส่
+                        Image childIconImage = GetChildImage(notchSlots[i]);
+                        if (childIconImage != null)
+                        {
+                            if (i < equippedIcons.Count && equippedIcons[i] != null)
+                            {
+                                childIconImage.sprite = equippedIcons[i];
+                                childIconImage.color = Color.white;
+                                childIconImage.enabled = true;
+                                childIconImage.gameObject.SetActive(true);
+                            }
+                            else
+                            {
+                                childIconImage.sprite = null;
+                                childIconImage.enabled = false;
+                                childIconImage.gameObject.SetActive(false);
+                            }
+                        }
                     }
                 }
             }
 
             // 3. สร้าง Card แสดงเครื่องรางที่มีอยู่ใน Vertical Scroll View
             RenderOwnedCharmCards();
+        }
+
+        /// <summary>
+        /// ดึงรายการ Icon ของเครื่องรางที่ถูกสวมใส่เรียงตาม Notch
+        /// </summary>
+        private List<Sprite> GetEquippedCharmIcons()
+        {
+            List<Sprite> icons = new List<Sprite>();
+            if (CharmManager.Instance == null) return icons;
+
+            List<string> equippedIds = CharmManager.Instance.GetEquippedCharmIdsList();
+            foreach (string id in equippedIds)
+            {
+                CharmItem charm = CharmManager.Instance.GetCharmById(id);
+                if (charm != null)
+                {
+                    for (int k = 0; k < charm.notchCost; k++)
+                    {
+                        icons.Add(charm.icon);
+                    }
+                }
+            }
+
+            return icons;
+        }
+
+        /// <summary>
+        /// ค้นหาคอมโพเนนต์ Image ที่เป็น Child Object ของ parentImage
+        /// </summary>
+        private Image GetChildImage(Image parentImage)
+        {
+            if (parentImage == null) return null;
+
+            foreach (Transform child in parentImage.transform)
+            {
+                Image img = child.GetComponent<Image>();
+                if (img != null)
+                {
+                    return img;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
