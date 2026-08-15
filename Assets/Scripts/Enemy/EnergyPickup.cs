@@ -9,8 +9,9 @@ public class EnergyPickup : MonoBehaviour
         if (other.CompareTag("Player"))
         {
 
+            float healMult = Charms.CharmManager.Instance != null ? Charms.CharmManager.Instance.GetFireballHealMultiplier() : 1.0f;
             PlayerEnergy.Instance?.AddEnergy(energyAmount, "Pickup");
-            PlayerHealth.Instance?.Heal(10);
+            PlayerHealth.Instance?.Heal(10f * healMult);
             Destroy(gameObject);
         }
 

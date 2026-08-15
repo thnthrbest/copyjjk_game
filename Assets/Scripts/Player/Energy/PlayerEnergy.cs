@@ -36,6 +36,16 @@ public class PlayerEnergy : MonoBehaviour
 
     void Start()
     {
+        if (PlayerStatsManager.Instance != null)
+        {
+            maxEnergyPerStack = PlayerStatsManager.Instance.GetMaxMP();
+        }
+        else
+        {
+            int mpLevel = PlayerPrefs.GetInt("MP_Level", 0);
+            maxEnergyPerStack = 100f + (mpLevel * 20f);
+        }
+
         UpdateUI();
     }
 

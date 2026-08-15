@@ -43,6 +43,16 @@ public class PlayerHealth : MonoBehaviour
 
     void Start()
     {
+        if (PlayerStatsManager.Instance != null)
+        {
+            maxHealth = PlayerStatsManager.Instance.GetMaxHP();
+        }
+        else
+        {
+            int hpLevel = PlayerPrefs.GetInt("HP_Level", 0);
+            maxHealth = 100f + (hpLevel * 20f);
+        }
+
         currentHealth = maxHealth;
         UpdateUI();
     }

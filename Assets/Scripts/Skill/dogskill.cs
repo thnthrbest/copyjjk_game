@@ -20,6 +20,7 @@ public class dogskill : MonoBehaviour
 
     private GameObject leftDog;
     private GameObject rightDog;
+    private GameObject centerDog;
 
     void Update()
     {
@@ -78,14 +79,23 @@ public class dogskill : MonoBehaviour
         // ให้หมาหันไปทางเดียวกับ Player
         Quaternion dogRot = Quaternion.LookRotation(transform.forward);
 
-        // สร้างหมา 2 ตัว
+        // สร้างหมา 2 ตัวพื้นฐาน
         leftDog = Instantiate(dogPrefab, leftPos, dogRot);
         rightDog = Instantiate(dogPrefab2, rightPos, dogRot);
+
+        // เช็คโบนัสเครื่องราง (+1 ตัว)
+        int extraWolf = Charms.CharmManager.Instance != null ? Charms.CharmManager.Instance.GetWolfExtraSummonCount() : 0;
+        if (extraWolf > 0)
+        {
+            Vector3 centerPos = point.position + (transform.forward * (forwardDistance + 1.5f));
+            centerDog = Instantiate(dogPrefab, centerPos, dogRot);
+            Debug.Log("[DogSkill] เรียกหมาตัวที่ 3 ตรงกลางจากโบนัสเครื่องราง!");
+        }
 
         isActive = true;
         isOnCooldown = true;
 
-        Debug.Log("[DogSkill] เรียกหมาซ้าย-ขวาแล้ว");
+        Debug.Log("[DogSkill] เรียกหมาเรียบร้อยแล้ว");
 
         // หมดเวลา → ลบหมา
         Invoke(nameof(EndSkill), activeDuration);
@@ -104,6 +114,9 @@ public class dogskill : MonoBehaviour
 
         if (rightDog != null)
             Destroy(rightDog);
+
+        if (centerDog != null)
+            Destroy(centerDog);
 
         isActive = false;
 

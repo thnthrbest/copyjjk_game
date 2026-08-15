@@ -54,11 +54,14 @@ public class cowskill : MonoBehaviour
             return;
         }
 
+        float extraDur = Charms.CharmManager.Instance != null ? Charms.CharmManager.Instance.GetBullExtraDuration() : 0f;
+        float finalProtectDuration = castProtectDuration + extraDur;
+
         // 1. เปิดโหมดเทพป้องกันตอนร่ายสกิล (Cast Protection)
         if (playerHealth != null)
         {
             playerHealth.godMode = true;
-            playerHealth.activeDuration = castProtectDuration;
+            playerHealth.activeDuration = finalProtectDuration;
         }
 
         // 2. สร้างวัวพุ่งไปข้างหน้า (Cowobj will handle its own movement & destruction)
@@ -84,10 +87,10 @@ public class cowskill : MonoBehaviour
         isActive = true;
         isOnCooldown = true;
 
-        Debug.Log("[CowSkill] เสกวัวพุ่งชนและคุ้มกันผู้เล่นชั่วคราว");
+        Debug.Log($"[CowSkill] เสกวัวพุ่งชนและคุ้มกันผู้เล่นชั่วคราว ({finalProtectDuration} วิ)");
 
         // จบคุ้มกันร่ายสกิลหลังครบเวลา
-        Invoke(nameof(EndProtect), castProtectDuration);
+        Invoke(nameof(EndProtect), finalProtectDuration);
 
         // คูลดาวน์หมด → ใช้ใหม่ได้
         Invoke(nameof(ResetCooldown), cooldown);
