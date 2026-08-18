@@ -53,8 +53,32 @@ namespace Charms
                 notchStatusText.text = $"ช่องเครื่องรางที่ใช้: {used} / {max}";
             }
 
-            // ดึงรายการ Icon ของเครื่องรางที่สวมใส่อยู่ตามจำนวน Notch ที่ใช้
-            List<Sprite> equippedIcons = GetEquippedCharmIcons();
+            // ดึงข้อมูล Slot ของเครื่องรางที่สวมใส่อยู่
+            List<Sprite> slotIcons = new List<Sprite>();
+            List<bool> isRemainingNotch = new List<bool>();
+
+            List<string> equippedIds = CharmManager.Instance.GetEquippedCharmIdsList();
+            foreach (string id in equippedIds)
+            {
+                CharmItem charm = CharmManager.Instance.GetCharmById(id);
+                if (charm != null)
+                {
+                    for (int k = 0; k < charm.notchCost; k++)
+                    {
+                        if (k == 0)
+                        {
+                            slotIcons.Add(charm.icon);
+                            isRemainingNotch.Add(false);
+                        }
+                        else
+                        {
+                            // ถ้า charm ใช้ตั้งแต่ 2 ช่องขึ้นไป ช่องที่เหลือจะไม่มี icon
+                            slotIcons.Add(null);
+                            isRemainingNotch.Add(true);
+                        }
+                    }
+                }
+            }
 
             // 2. อัปเดตสล็อตไอคอน Notch
             if (notchSlots != null)
@@ -64,15 +88,25 @@ namespace Charms
                     if (notchSlots[i] != null)
                     {
                         bool isSlotActive = (i < used);
-                        notchSlots[i].color = isSlotActive ? activeSlotColor : emptySlotColor;
+                        bool isRemaining = (i < isRemainingNotch.Count && isRemainingNotch[i]);
+
+                        if (isSlotActive)
+                        {
+                            // ถ้าเป็นช่องที่เหลือของ charm ที่ใช้ >= 2 ช่อง ให้เปลี่ยนสีเป็นสีขาว (#FFFFFF)
+                            notchSlots[i].color = isRemaining ? Color.white : activeSlotColor;
+                        }
+                        else
+                        {
+                            notchSlots[i].color = emptySlotColor;
+                        }
 
                         // อัปเดต child Image (ถ้ามี) ให้แสดงไอคอนของ Charm ที่สวมใส่
                         Image childIconImage = GetChildImage(notchSlots[i]);
                         if (childIconImage != null)
                         {
-                            if (i < equippedIcons.Count && equippedIcons[i] != null)
+                            if (i < slotIcons.Count && slotIcons[i] != null)
                             {
-                                childIconImage.sprite = equippedIcons[i];
+                                childIconImage.sprite = slotIcons[i];
                                 childIconImage.color = Color.white;
                                 childIconImage.enabled = true;
                                 childIconImage.gameObject.SetActive(true);
@@ -93,30 +127,6 @@ namespace Charms
         }
 
         /// <summary>
-        /// ดึงรายการ Icon ของเครื่องรางที่ถูกสวมใส่เรียงตาม Notch
-        /// </summary>
-        private List<Sprite> GetEquippedCharmIcons()
-        {
-            List<Sprite> icons = new List<Sprite>();
-            if (CharmManager.Instance == null) return icons;
-
-            List<string> equippedIds = CharmManager.Instance.GetEquippedCharmIdsList();
-            foreach (string id in equippedIds)
-            {
-                CharmItem charm = CharmManager.Instance.GetCharmById(id);
-                if (charm != null)
-                {
-                    for (int k = 0; k < charm.notchCost; k++)
-                    {
-                        icons.Add(charm.icon);
-                    }
-                }
-            }
-
-            return icons;
-        }
-
-        /// <summary>
         /// ค้นหาคอมโพเนนต์ Image ที่เป็น Child Object ของ parentImage
         /// </summary>
         private Image GetChildImage(Image parentImage)
@@ -125,8 +135,7 @@ namespace Charms
 
             foreach (Transform child in parentImage.transform)
             {
-                Image img = child.GetComponent<Image>();
-                if (img != null)
+                if (child.TryGetComponent<Image>(out Image img))
                 {
                     return img;
                 }

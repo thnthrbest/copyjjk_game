@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Linq;
 
 [System.Serializable]
@@ -18,13 +19,18 @@ public class StagePathController : MonoBehaviour
     public float moveSpeed = 6f;
     public float stopDistance = 0.5f;
 
+    [Tooltip("ชื่อ Scene ที่จะเปลี่ยนไปเมื่อจบ Stage (เช่น EndGame)")]
+    public string endSceneName = "EndGame";
+    [Tooltip("เวลารอก่อนเปลี่ยน Scene (วินาที)")]
+    public float endSceneDelay = 2.0f;
+
     public GameObject ps,ps2;
     ParticleSystem particle,particle2;
     ParticleSystem.EmissionModule emission,emission2;
 
-    
     int currentIndex = 0;
     public bool moving = true;
+    private bool stageCompleted = false;
 
     void Start()
     {
@@ -34,10 +40,9 @@ public class StagePathController : MonoBehaviour
         emission2 = particle2.emission;
     }
 
-
     void Update()
     {
-        if (stagePoints.Count == 0) return;
+        if (stagePoints.Count == 0 || stageCompleted) return;
 
         StagePoint point = stagePoints[currentIndex];
 
@@ -115,8 +120,6 @@ public class StagePathController : MonoBehaviour
                 enemyCount++;
         }
 
-        //Debug.Log("Enemies Remaining: " + enemyCount);
-
         if (enemyCount == 0)
             GoNextPoint();
     }
@@ -137,12 +140,20 @@ public class StagePathController : MonoBehaviour
 
         if (currentIndex >= stagePoints.Count)
         {
-            Debug.Log("Stage Complete");
+            stageCompleted = true;
+            Debug.Log($"Stage Complete! Loading end scene '{endSceneName}' in {endSceneDelay} seconds...");
+            if (!string.IsNullOrEmpty(endSceneName))
+            {
+                Invoke(nameof(LoadEndScene), endSceneDelay);
+            }
             return;
         }
 
         moving = true;
+    }
 
-        //Debug.Log("Moving to Point " + currentIndex);
+    private void LoadEndScene()
+    {
+        SceneManager.LoadScene(endSceneName);
     }
 }

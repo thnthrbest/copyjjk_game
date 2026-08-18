@@ -662,7 +662,7 @@ public class HandInputReceiver : MonoBehaviour
             // ทำงานต่อเมื่อเคยได้รับข้อมูล UDP มาแล้วอย่างน้อย 1 ครั้ง เพื่อเลี่ยงการยิงเตือนช่วงยังไม่เชื่อมต่อ / โหลดเกม
             if (!hasReceivedUdp) return;
 
-            bool isIdleState = LeftHand.Equals("Idle", StringComparison.OrdinalIgnoreCase) || 
+            bool isIdleState = LeftHand.Equals("NONE", StringComparison.OrdinalIgnoreCase) || 
                                RightHand.Equals("NONE", StringComparison.OrdinalIgnoreCase);
 
             if (isIdleState)

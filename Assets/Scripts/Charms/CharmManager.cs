@@ -56,80 +56,80 @@ namespace Charms
         /// เตรียมรายชื่อเครื่องรางทั้งหมด 7 ชิ้น
         /// </summary>
         private void InitializeCharmsList()
+    {
+        if (charmDatabase != null && charmDatabase.charms.Count > 0)
         {
-            if (charmDatabase != null && charmDatabase.charms.Count > 0)
-            {
-                allCharms = new List<CharmItem>(charmDatabase.charms);
-                return;
-            }
-
-            allCharms = new List<CharmItem>
-            {
-                new CharmItem
-                {
-                    id = "charm_fireball_heal",
-                    charmName = "เครื่องรางเพลิงเยียวยา",
-                    description = "เก็บลูกไฟได้เลือดเยอะขึ้น 50% ต่อชิ้น",
-                    notchCost = 2,
-                    effectType = CharmEffectType.FireballHealBoost,
-                    value = 0.50f
-                },
-                new CharmItem
-                {
-                    id = "charm_rabbit_duration",
-                    charmName = "เครื่องรางกระต่ายท่องนภา",
-                    description = "เพิ่มระยะเวลาของอาคมกระต่ายนานขึ้น 10 วินาทีต่อชิ้น",
-                    notchCost = 1,
-                    effectType = CharmEffectType.RabbitDurationAdd,
-                    value = 10f
-                },
-                new CharmItem
-                {
-                    id = "charm_wolf_summon",
-                    charmName = "เครื่องรางจ่าฝูงหมาป่า",
-                    description = "เพิ่มจำนวนการอัญเชิญหมาป่าของอาคมหมาป่า 1 ตัวต่อชิ้น",
-                    notchCost = 1,
-                    effectType = CharmEffectType.WolfSummonAdd,
-                    value = 1f
-                },
-                new CharmItem
-                {
-                    id = "charm_deer_regen",
-                    charmName = "เครื่องรางกวางพฤกษา",
-                    description = "เพิ่มอัตราการฟื้นฟูของอาคมกวาง 50% ต่อชิ้น",
-                    notchCost = 1,
-                    effectType = CharmEffectType.DeerRegenBoost,
-                    value = 0.50f
-                },
-                new CharmItem
-                {
-                    id = "charm_bull_duration",
-                    charmName = "เครื่องรางวัวถึกทรหด",
-                    description = "เพิ่มระยะเวลาของอาคมวัวนานขึ้น 5 วินาทีต่อชิ้น",
-                    notchCost = 1,
-                    effectType = CharmEffectType.BullDurationAdd,
-                    value = 5f
-                },
-                new CharmItem
-                {
-                    id = "charm_base_attack",
-                    charmName = "เครื่องรางทรงพลัง",
-                    description = "เพิ่มพลังการโจมตีพื้นฐาน 50% ต่อชิ้น",
-                    notchCost = 2,
-                    effectType = CharmEffectType.BaseAttackBoost,
-                    value = 0.50f
-                },
-                new CharmItem
-                {
-                    id = "charm_attack_speed",
-                    charmName = "เครื่องรางวายุว่องไว",
-                    description = "เพิ่มความเร็วในการโจมตี 50% ต่อชิ้น",
-                    notchCost = 2,
-                    effectType = CharmEffectType.AttackSpeedBoost,
-                    value = 0.50f
-                }
-            };
+            allCharms = new List<CharmItem>(charmDatabase.charms);
+            return;
         }
+
+        allCharms = new List<CharmItem>
+        {
+            new CharmItem
+            {
+                id = "charm_fireball_heal",
+                charmName = "Flame Healing Charm",
+                description = "Increases the healing received from collecting fireballs by 50% per charm.",
+                notchCost = 2,
+                effectType = CharmEffectType.FireballHealBoost,
+                value = 0.50f
+            },
+            new CharmItem
+            {
+                id = "charm_rabbit_duration",
+                charmName = "Skybound Rabbit Charm",
+                description = "Increases the duration of the Rabbit spell by 10 seconds per charm.",
+                notchCost = 1,
+                effectType = CharmEffectType.RabbitDurationAdd,
+                value = 10f
+            },
+            new CharmItem
+            {
+                id = "charm_wolf_summon",
+                charmName = "Wolf Pack Leader Charm",
+                description = "Increases the number of wolves summoned by the Wolf spell by 1 per charm.",
+                notchCost = 1,
+                effectType = CharmEffectType.WolfSummonAdd,
+                value = 1f
+            },
+            new CharmItem
+            {
+                id = "charm_deer_regen",
+                charmName = "Verdant Deer Charm",
+                description = "Increases the regeneration rate of the Deer spell by 50% per charm.",
+                notchCost = 1,
+                effectType = CharmEffectType.DeerRegenBoost,
+                value = 0.50f
+            },
+            new CharmItem
+            {
+                id = "charm_bull_duration",
+                charmName = "Unyielding Bull Charm",
+                description = "Increases the duration of the Bull spell by 5 seconds per charm.",
+                notchCost = 1,
+                effectType = CharmEffectType.BullDurationAdd,
+                value = 5f
+            },
+            new CharmItem
+            {
+                id = "charm_base_attack",
+                charmName = "Mighty Charm",
+                description = "Increases base attack power by 50% per charm.",
+                notchCost = 2,
+                effectType = CharmEffectType.BaseAttackBoost,
+                value = 0.50f
+            },
+            new CharmItem
+            {
+                id = "charm_attack_speed",
+                charmName = "Swift Wind Charm",
+                description = "Increases attack speed by 50% per charm.",
+                notchCost = 2,
+                effectType = CharmEffectType.AttackSpeedBoost,
+                value = 0.50f
+            }
+        };
+    }
 
         // ─────────────────────────────
         //  Box Drop & Gacha System

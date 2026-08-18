@@ -71,41 +71,45 @@ public class StageBoxUI : MonoBehaviour
     /// <summary>
     /// Auto-initializes Box UI HUD element on the scene Canvas if none exists in stage_1.
     /// </summary>
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void AutoInitStageBoxUI()
-    {
-        if (FindObjectOfType<StageBoxUI>() != null) return;
+    // [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    // private static void AutoInitStageBoxUI()
+    // {
+    //     if (FindObjectOfType<StageBoxUI>() != null)
+    //     {
+    //         return;
+    //     }
 
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas != null)
-        {
-            GameObject boxUiObj = new GameObject("StageBoxUI_HUD");
-            boxUiObj.transform.SetParent(canvas.transform, false);
 
-            RectTransform rect = boxUiObj.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(1, 1); // Top Right
-            rect.anchorMax = new Vector2(1, 1);
-            rect.pivot = new Vector2(1, 1);
-            rect.anchoredPosition = new Vector2(-30, -30);
-            rect.sizeDelta = new Vector2(200, 50);
+    //     Canvas canvas = FindObjectOfType<Canvas>();
+    //     if (canvas != null)
+    //     {
+    //         GameObject boxUiObj = new GameObject("StageBoxUI_HUD");
+    //         boxUiObj.transform.SetParent(canvas.transform, false);
 
-            TextMeshProUGUI tmpText = boxUiObj.AddComponent<TextMeshProUGUI>();
-            tmpText.fontSize = 28;
-            tmpText.alignment = TextAlignmentOptions.Right;
-            tmpText.color = new Color(1.0f, 0.85f, 0.2f); // Gold color
-            tmpText.fontStyle = FontStyles.Bold;
+    //         RectTransform rect = boxUiObj.AddComponent<RectTransform>();
+    //         rect.anchorMin = new Vector2(1, 1); // Top Right
+    //         rect.anchorMax = new Vector2(1, 1);
+    //         rect.pivot = new Vector2(1, 1);
+    //         rect.anchoredPosition = new Vector2(-30, -30);
+    //         rect.sizeDelta = new Vector2(200, 50);
 
-            StageBoxUI stageBoxUI = boxUiObj.AddComponent<StageBoxUI>();
-            stageBoxUI.boxCountText = tmpText;
+    //         TextMeshProUGUI tmpText = boxUiObj.AddComponent<TextMeshProUGUI>();
+    //         tmpText.fontSize = 28;
+    //         tmpText.alignment = TextAlignmentOptions.Right;
+    //         tmpText.color = new Color(1.0f, 0.85f, 0.2f); // Gold color
+    //         tmpText.fontStyle = FontStyles.Bold;
 
-            if (CharmManager.Instance != null)
-            {
-                stageBoxUI.UpdateBoxCountUI(CharmManager.Instance.GetRunBoxesCount());
-            }
-            else
-            {
-                stageBoxUI.UpdateBoxCountUI(0);
-            }
-        }
-    }
+    //         StageBoxUI stageBoxUI = boxUiObj.AddComponent<StageBoxUI>();
+    //         stageBoxUI.boxCountText = tmpText;
+
+    //         if (CharmManager.Instance != null)
+    //         {
+    //             stageBoxUI.UpdateBoxCountUI(CharmManager.Instance.GetRunBoxesCount());
+    //         }
+    //         else
+    //         {
+    //             stageBoxUI.UpdateBoxCountUI(0);
+    //         }
+    //     }
+    // }
 }

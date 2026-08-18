@@ -98,9 +98,14 @@ public class BossMaster : MonoBehaviour
 
     public void Die()
     {
+        if (isDead) return;
         isDead = true;
         StopAllCoroutines();
         Debug.Log("Boss is Dead!");
+        if (GetComponent<EnemyHealth>() == null)
+        {
+            Destroy(gameObject, 1.0f);
+        }
     }
 
     private void OnDrawGizmosSelected()
