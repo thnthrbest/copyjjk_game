@@ -27,10 +27,4 @@ namespace Charms
         public float value = 0.5f;
         public Sprite icon;
     }
-
-    [CreateAssetMenu(fileName = "CharmDatabase", menuName = "Charms/Charm Database", order = 1)]
-    public class CharmDatabaseSO : ScriptableObject
-    {
-        public List<CharmItem> charms = new List<CharmItem>();
-    }
 }

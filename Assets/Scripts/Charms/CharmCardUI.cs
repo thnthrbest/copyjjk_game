@@ -52,10 +52,10 @@ namespace Charms
             }
 
             // 4. Notch Cost
-            if (notchCostText != null)
-            {
-                notchCostText.text = $"ใช้ช่อง: {charm.notchCost}";
-            }
+            // if (notchCostText != null)
+            // {
+            //     notchCostText.text = $"ใช้ช่อง: {charm.notchCost}";
+            // }
 
             // 5. Owned & Equipped Count
             int ownedCount = CharmManager.Instance.GetOwnedCount(charm.id);
@@ -63,7 +63,7 @@ namespace Charms
 
             if (ownedCountText != null)
             {
-                ownedCountText.text = $"มีอยู่: {ownedCount} ชิ้น (ใส่แล้ว {equippedCount})";
+                ownedCountText.text = $"x{ownedCount}";
             }
 
             // 6. Equip / Unequip Buttons Logic
@@ -79,10 +79,10 @@ namespace Charms
 
                 equipButton.interactable = canEquipMore;
 
-                if (equipBtnText != null)
-                {
-                    equipBtnText.text = "สวมใส่ (+)";
-                }
+                // if (equipBtnText != null)
+                // {
+                //     equipBtnText.text = "สวมใส่ (+)";
+                // }
             }
 
             if (unequipButton != null)

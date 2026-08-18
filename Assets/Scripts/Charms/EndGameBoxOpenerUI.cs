@@ -116,7 +116,7 @@ namespace Charms
             if (charmDescText != null) charmDescText.text = item.description;
 
             int totalOwned = CharmManager.Instance.GetOwnedCount(item.id);
-            if (charmOwnedCountText != null) charmOwnedCountText.text = $"ครอบครองแล้วทั้งหมด: {totalOwned} ชิ้น";
+            if (charmOwnedCountText != null) charmOwnedCountText.text = $"x{totalOwned}";
 
             int remainingBoxes = CharmManager.Instance.GetRunBoxesCount();
             if (continueButton != null)
@@ -126,7 +126,7 @@ namespace Charms
 
                 if (remainingBoxes > 0)
                 {
-                    if (btnText != null) btnText.text = $"เปิดกล่องถัดไป (เหลือ {remainingBoxes} กล่อง)";
+                    if (btnText != null) btnText.text = $"x{remainingBoxes}";
                     continueButton.onClick.AddListener(() =>
                     {
                         resultDisplayContainer.SetActive(false);
@@ -139,6 +139,7 @@ namespace Charms
                     {
                         ShowMainEndGamePanel();
                     });
+                    resultDisplayContainer.SetActive(false);
                 }
             }
 
@@ -152,7 +153,7 @@ namespace Charms
         {
             if (boxesRemainingText != null)
             {
-                boxesRemainingText.text = $"คุณได้กล่องเครื่องรางจากการเล่น: {count} กล่อง";
+                boxesRemainingText.text = $"x{count}";
             }
         }
 
