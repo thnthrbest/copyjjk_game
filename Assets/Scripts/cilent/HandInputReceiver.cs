@@ -468,32 +468,60 @@ public class HandInputReceiver : MonoBehaviour
 
     private void FireSkill(string gesture)
     {
-        var img = skill.GetComponent<Image>();
+        Sprite targetSprite = null;
+
         switch (gesture)
         {
             case "rabbit":
-                img.sprite = animalSprite[0];
-                player.GetComponent<rabbitskill>().StartSkill();
+                if (animalSprite != null && animalSprite.Length > 0)
+                    targetSprite = animalSprite[0];
+                if (player != null && player.TryGetComponent<rabbitskill>(out var rabbitComp))
+                    rabbitComp.StartSkill();
                 break;
             case "dog":
-                img.sprite = animalSprite[1];
-                player.GetComponent<dogskill>().StartSkill();
+                if (animalSprite != null && animalSprite.Length > 1)
+                    targetSprite = animalSprite[1];
+                if (player != null && player.TryGetComponent<dogskill>(out var dogComp))
+                    dogComp.StartSkill();
                 break;
             case "cow":
                 if (animalSprite != null && animalSprite.Length > 2)
-                    img.sprite = animalSprite[2];
-                var cowComp = player.GetComponent<cowskill>();
-                if (cowComp != null) cowComp.StartSkill();
+                    targetSprite = animalSprite[2];
+                if (player != null && player.TryGetComponent<cowskill>(out var cowComp))
+                    cowComp.StartSkill();
                 break;
             case "deer":
                 if (animalSprite != null && animalSprite.Length > 3)
-                    img.sprite = animalSprite[3];
-                Debug.LogWarning("[Skill] deer skill: ยังไม่มี component deerskิll — เพิ่ม script ได้ภายหลัง");
-                // TODO: เพิ่มเมื่อมี deerskิll.cs แล้ว: player.GetComponent<deerskิll>().StartSkill();
+                    targetSprite = animalSprite[3];
+                Debug.LogWarning("[Skill] deer skill: ยังไม่มี component deerskill — เพิ่ม script ได้ภายหลัง");
                 break;
             default:
                 Debug.LogWarning($"[Skill] ไม่รู้จักสกิล: {gesture}");
                 break;
+        }
+
+        if (skill != null)
+        {
+            if (!skill.activeSelf)
+                skill.SetActive(true);
+
+            if (skill.TryGetComponent<ui_skill>(out var uiSkillComp))
+            {
+                uiSkillComp.TriggerSkill(targetSprite);
+            }
+            else
+            {
+                if (skill.TryGetComponent<Image>(out var img) && targetSprite != null)
+                {
+                    img.sprite = targetSprite;
+                }
+
+                if (skill.TryGetComponent<Animator>(out var anim))
+                {
+                    anim.SetBool("use", true);
+                    anim.Play("skill", 0, 0f);
+                }
+            }
         }
     }
 
