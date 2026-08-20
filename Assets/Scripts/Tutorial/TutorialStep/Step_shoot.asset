@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Step_shoot
   m_EditorClassIdentifier: 
   stageIndex: 5
+  conditionLogic: 0
   acceptedConditions:
   - source: 1
     expectedValue: SHOOT
-  - source: 1
-    expectedValue: SWITCH TARGET
   holdDuration: 0.5
   isSkillStep: 0
+  skillFinalConditions: []
