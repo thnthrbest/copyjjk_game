@@ -150,6 +150,10 @@ MonoBehaviour:
   speed: 100
   rotateSpeed: 10
   lifeTime: 5
+  shootSound: {fileID: 8300000, guid: f7e4d9ec134f2f144bad0ce72d942a27, type: 3}
+  shootVolume: 0.3
+  hitSound: {fileID: 8300000, guid: d1c7f00afc9042c4e803f35fd7424d0d, type: 3}
+  hitVolume: 0.778
 --- !u!1001 &5081037547473857485
 PrefabInstance:
   m_ObjectHideFlags: 0
